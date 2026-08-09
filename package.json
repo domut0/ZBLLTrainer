@@ -1,0 +1,9 @@
+{
+  "name": "lock-in",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "dependencies": {
+    "cubing": "^0.63.3"
+  }
+}
