@@ -35,7 +35,7 @@ const everyAlg = CASES.flatMap((c) => c.algs.map((a) => ({ case: c, alg: a })))
 
 describe('the client-side cube', () => {
   it('has every algorithm in the dataset to check against', () => {
-    expect(everyAlg.length).toBe(1449)
+    expect(everyAlg.length).toBe(1575)
   })
 
   it('agrees with cubing.js on all 1449 algorithms', () => {

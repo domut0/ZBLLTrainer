@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ALG_SET_BY_ID, CASES_BY_ID, SCRAMBLES, casesInAlgSet, groupsInAlgSet } from '@/data'
 import type { AlgSetId, CaseSubset, Scramble, TrainerCase } from '@/data/types'
-import { LLDiagram } from '@/components/LLDiagram'
+import { CaseDiagram } from '@/components/CaseDiagram'
 import { revealAlgorithm } from '@/drill/reveal'
 import {
   addAttempt,
@@ -602,7 +602,8 @@ export function DrillView({ algSet, onGoToBrowse }: DrillViewProps) {
                     </h2>
                   </div>
                   <div className="flex-none w-20 h-20 rounded-xl bg-zinc-950/60 border border-zinc-800/60 p-1.5 flex items-center justify-center">
-                    <LLDiagram
+                    <CaseDiagram
+                      algSet={served.c.algSet}
                       facelets={served.c.facelets[served.scramble.auf]}
                       className="w-full h-full"
                       label={`${served.c.displayName} at the served AUF`}

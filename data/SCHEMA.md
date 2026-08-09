@@ -3,6 +3,8 @@
 Frozen ahead of the importer so dependent work can start. Issue 02 must produce
 exactly this; Issues 03, 06 and 07 may rely on it.
 
+**Amended 2026-08-09 (Issue 12)** — added the `LXS` set (Last eXtension Slot in APB, 116 cases across six sheets). Introduced stage facelets for F2L-stage sets: a 28-character `FaceletString` extending the 21 last-layer stickers with 7 FR/DR slot stickers (indices 21–27). `AlgSetDef.diagram` selects `'stage'`. `scripts/verify-lxs-reveal.mjs` checks all 504 LXS reveal combinations exhaustively.
+
 **Amended 2026-08-09 (Issue 11)** — added the `COLL` set, derived at build time
 from the ZBLL cases rather than from any new source data. Added `?` to the
 `FaceletString` alphabet for a "don't care" sticker, used at the four
@@ -96,21 +98,21 @@ interface TrainerCase {
   /** The canonical representative of the AUF orbit. */
   state: CubeState;
   /**
-   * The rendered last layer, one entry per AUF, indexed 0-3 with the same
-   * meaning as `Scramble.auf` below: entry k is the case with k quarter-turns
-   * of the top layer applied. A scramble tagged `auf: k` lands on `facelets[k]`
-   * exactly — asserted end-to-end in scripts/verify-facelets.mjs.
+   * The rendered last layer (or stage diagram), one entry per AUF, indexed 0-3
+   * with the same meaning as `Scramble.auf` below: entry k is the case with k
+   * quarter-turns of the top layer applied. A scramble tagged `auf: k` lands on
+   * `facelets[k]` exactly — asserted end-to-end in scripts/verify-facelets.mjs.
    */
   facelets: [FaceletString, FaceletString, FaceletString, FaceletString];
   algs: CaseAlg[];
 }
 
-type CasesFile = TrainerCase[]; // 512 entries: 472 ZBLL + 40 derived COLL
+type CasesFile = TrainerCase[]; // 628 entries: 472 ZBLL + 40 derived COLL + 116 LXS
 ```
 
 ### `FaceletString`
 
-21 characters, one per visible last-layer sticker. Colours are single letters:
+21 characters for last-layer sets (ZBLL, COLL), 28 characters for stage sets (LXS). One per visible sticker. Colours are single letters:
 
 | Letter | Colour | Face |
 |---|---|---|
@@ -119,10 +121,10 @@ type CasesFile = TrainerCase[]; // 512 entries: 472 ZBLL + 40 derived COLL
 | `O` | orange | R |
 | `B` | blue | B |
 | `R` | red | L |
-| `W` | white | D — **never appears in a last-layer diagram** |
+| `W` | white | D — **appears on slot stickers in stage diagrams** |
 | `?` | grey | don't care — **used for COLL edges** |
 
-Index layout, as the diagram is drawn (green front at the bottom):
+Index layout for last-layer diagrams (21 stickers):
 
 ```
         9 10 11            <- B bar, above the square
@@ -132,12 +134,20 @@ Index layout, as the diagram is drawn (green front at the bottom):
        15 16 17            <- F bar, below the square
 ```
 
-- **0–8** — the U face, row-major. Row 0 is the back row, column 0 is the left
-  column. Index 4 is the centre and is always `Y`.
+- **0–8** — the U face, row-major. Row 0 is the back row, column 0 is the left column. Index 4 is the centre and is always `Y`.
 - **9–11** — B bar, left to right as drawn.
 - **12–14** — R bar, top to bottom as drawn.
 - **15–17** — F bar, left to right as drawn.
 - **18–20** — L bar, top to bottom as drawn.
+
+For F2L-stage sets (LXS): 28 characters. Indices 0–20 are the last-layer stickers above; indices 21–27 are the 7 FR/DR slot stickers derived directly from PuzzleGeometry:
+- **21** — FR edge, F sticker
+- **22** — FR edge, R sticker
+- **23** — DFR corner, F sticker
+- **24** — DFR corner, R sticker
+- **25** — DFR corner, D sticker
+- **26** — DR edge, R sticker
+- **27** — DR edge, D sticker
 
 Each bar is already ordered to line up with the edge of the square it touches,
 so a renderer never has to reason about the cube. Invariants that hold for every

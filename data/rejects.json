@@ -133,6 +133,993 @@
       "index": 1,
       "alg": "[U'] x' D R U' R' D' R U R'",
       "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 1,
+      "alg": "(U) R U D' R U R' D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 2,
+      "alg": "(U) R' U2 R U R' U' R U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 3,
+      "alg": "R U R' U' R' U' R U R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 4,
+      "alg": "(U') R2 U' R2 U' R2 U R2",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 4,
+      "alg": "R' U' R U R2 U2 R' U R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 7,
+      "alg": "(U) R U2' R2' U' R U R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 7,
+      "alg": "(U) R U' R2 U' R2' U' R U2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 8,
+      "alg": "R U2 R D' R U' R' U D R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 8,
+      "alg": "S R2' S' R3 U' R' U2 R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 9,
+      "alg": "(U') R' U' R U R2 U R' U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 10,
+      "alg": "R' U2' R D' R U R' U D R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 10,
+      "alg": "R U' R' U R U' R2 U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 11,
+      "alg": "(U2) R U R' U' R D' R U' R' D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 11,
+      "alg": "(U2) R' U' R U' R U R' U R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 12,
+      "alg": "(U') R' U2 R2 U R' U R U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 12,
+      "alg": "R U' R2 U2 R U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 12,
+      "alg": "(U) R2' F R U R2 U' R' F' R2",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 13,
+      "alg": "R2 U R' U2 D R' U' R U D' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 14,
+      "alg": "R U R2 U2' R' U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 14,
+      "alg": "(U2) R' U' R U R2 U R' U R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 14,
+      "alg": "(U') R' U2' R U R U' R' U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 14,
+      "alg": "(U) R U' R' U R U' R2 U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 15,
+      "alg": "(U2) R' U' R U' D' R U R' U D R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 15,
+      "alg": "(U2) R' U2' R U R2 U' R' U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 16,
+      "alg": "(U) R' U' R2 U' R' U2 R U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 17,
+      "alg": "(U) R' U' R U R U2 R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 17,
+      "alg": "R U' R' U R' U2' R U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 19,
+      "alg": "(U) R U' R' U R U' R' U R' U' R2 U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 19,
+      "alg": "(U2) R U' R2 U' R U R U2' R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 21,
+      "alg": "(U') R U' D' R U R' D R' U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 22,
+      "alg": "R U R2' U' R U R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 22,
+      "alg": "R U D' R U' R' U2 D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 23,
+      "alg": "R U R U' R' U2 R' D' R U2 R' D",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 23,
+      "alg": "(U) R U2 R' U2 R' U2 R2 U2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 24,
+      "alg": "(U') F R2' F' R U R' U' F R2 F'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 25,
+      "alg": "(U) R' U2 R U2 R' S R2' S'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 26,
+      "alg": "R U' R2 D' R U2 R' D R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 26,
+      "alg": "(U) R U' R' U' R U' R' U R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 27,
+      "alg": "R U' R' U2 R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "UFR",
+      "index": 30,
+      "alg": "(U2) R2 U2 R2 U' R2 U' R2",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 31,
+      "alg": "(U') R U' R' U R' U' R U R U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 31,
+      "alg": "R' U2 R U2 R U R U' R2 U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 32,
+      "alg": "R U' R' U2 R' U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 32,
+      "alg": "R U2 R' U R U' R2 U' R2 U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 33,
+      "alg": "(U) R' U2 R U2 R U' R U' R' U R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 33,
+      "alg": "(U) R' U' R2 U' R' U R U' R' U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 35,
+      "alg": "(U) S R2' S' R2 U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 35,
+      "alg": "R' U' R U D' R U' R' D R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 36,
+      "alg": "(U') R' U2' R2 U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 36,
+      "alg": "R D' R U2' R' U D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 36,
+      "alg": "(U') R' U' R S' U2 S U' R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 38,
+      "alg": "(U') R' U R U2 R2 U2 R' U' R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 38,
+      "alg": "R' U2 R U2 R U R U' R' U R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 39,
+      "alg": "(U2) R U2 R' U R' U' R U R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 39,
+      "alg": "(U2) B' U' R2 U R2' f z'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 39,
+      "alg": "(U2) f' r' F2 r U2' f",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 41,
+      "alg": "(U2) R' U' R2 U' R' U2 R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 42,
+      "alg": "(U2) R' U' R U R U2 R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 44,
+      "alg": "(U) R U R' U R' U2' R U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 45,
+      "alg": "(U) R U R' U R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 46,
+      "alg": "(U2) R U2 R2 U2' R' U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 47,
+      "alg": "(U2) S' U2 S U' R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 47,
+      "alg": "S R2' S' R2 U' R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 47,
+      "alg": "(U2) R U' R' U R' U2 R U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 48,
+      "alg": "R U2' R2' U' R2 U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 48,
+      "alg": "(U2) R' U2 R U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 51,
+      "alg": "(U) R U' R' U2 R' U' R U R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 52,
+      "alg": "(U) R' U' R' U R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 53,
+      "alg": "R U2' R' S R2' S' R3 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 53,
+      "alg": "R U' R' U2 R' U' R U R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 55,
+      "alg": "(U2) R U' R' U2 R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 56,
+      "alg": "R' D' R U2 R' D R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 56,
+      "alg": "(U) R U' R' U' R U R' U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 57,
+      "alg": "(U') R U R' U R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 60,
+      "alg": "(U) R U R' U2 R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RFU",
+      "index": 60,
+      "alg": "(U') R' D' R U R' D R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 63,
+      "alg": "(U) S R2' S' R3 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 64,
+      "alg": "D' R' D R2 U' R2 D' R D",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 66,
+      "alg": "R U R' U2 R U' R2' U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 67,
+      "alg": "(U') R U R' U' R' U' R U R2 U2' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 67,
+      "alg": "(U2) R U' R' U2 R' U' R' U' R U2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 68,
+      "alg": "(U2) R U' R2 U' R2 U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 68,
+      "alg": "(U) R U' R' S R2' S' R2",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 69,
+      "alg": "(U') R U' R' U R' U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 69,
+      "alg": "(U') R' U' R U R2 U' R' U R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 70,
+      "alg": "(U2) R U' R' U R U R' U' R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 71,
+      "alg": "(U2) B' R2 U' R2 U B R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 71,
+      "alg": "(U2) R' U' F R U R U' R' F' R2 U2 R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 72,
+      "alg": "(U) R' U2' R2 U2' R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 72,
+      "alg": "(U') R U2 R' U R' U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 75,
+      "alg": "(U) R' U' R U' R' U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 76,
+      "alg": "(U) R' U' R U' R U R' U R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 77,
+      "alg": "(U) R' U' R U R2 U' R' U R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 78,
+      "alg": "(U') R U R' U R' U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 80,
+      "alg": "(U) L U L' U B2' R B2",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 80,
+      "alg": "(U) R' U' R U R2 U2 R' U R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 81,
+      "alg": "R' U' R2 U' R' U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 82,
+      "alg": "(U) R2 F R' U R U' F' R2'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 83,
+      "alg": "F' R U R U' R' F R",
+      "reason": "F2L corner 7 disturbed"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 83,
+      "alg": "R’ F’ (R U R’ U’) R’ F U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 83,
+      "alg": "(U2) R' F R f' U' R U' R' S",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 84,
+      "alg": "R' U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 85,
+      "alg": "R U' F' R U R' U' R' F",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 85,
+      "alg": "(U) R U2 R' U' R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 85,
+      "alg": "R U2 R2 U2 R U2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 86,
+      "alg": "(U) R' F R U R U' R' F' R U2 R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 86,
+      "alg": "R' D' R U' R' D R U R U' R",
+      "reason": "F2L corner 7 disturbed"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 88,
+      "alg": "(U') R U R' U' R U2 R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FUR",
+      "index": 89,
+      "alg": "(U2) R U2 R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 91,
+      "alg": "(U2) R U R F R' U R U' F' R2'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 91,
+      "alg": "(U) R U' R U' R' U R' D' R U' R' D",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 92,
+      "alg": "R' U' R U R U R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 92,
+      "alg": "(U') R U R2 U' R2 U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 93,
+      "alg": "(U') S' U2 R U' R' f R' F' R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 93,
+      "alg": "(U2) R U' R' U' R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 94,
+      "alg": "(U') R U' R' U R' U' R' U R2 U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 94,
+      "alg": "(U2) R U2 R' U R D' R U' R' D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 95,
+      "alg": "R' U' R2 U' R' U R' U' R U2 R2 U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 95,
+      "alg": "(U2) R U R' U2 R D' R U' R' D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 96,
+      "alg": "(U) R D' R U R' U R U' R' D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 96,
+      "alg": "(U) R' U' R' U R U R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 96,
+      "alg": "(U2) F' R U R' U' R' F R S' U2' S",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 97,
+      "alg": "R U' R' U R U R' U R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 98,
+      "alg": "(U2) F' R U R' U' R' F R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 98,
+      "alg": "(U) R' U' R' U' R U R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 98,
+      "alg": "R U' R' U R' D' R U' R' D R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "DFR",
+      "index": 98,
+      "alg": "(U2) R U' R' U2 R U' R' U' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RDF",
+      "index": 99,
+      "alg": "(U) R' U' R U R U' R' U' R U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RDF",
+      "index": 101,
+      "alg": "(U2) R F' R U R' U' R' F R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RDF",
+      "index": 101,
+      "alg": "R2 U' R' U2 R' D' R U2 R' D",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RDF",
+      "index": 105,
+      "alg": "R U2 R' U R D' R U R' U' D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RDF",
+      "index": 105,
+      "alg": "y r' F r U' R' F r U' M",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "RDF",
+      "index": 106,
+      "alg": "(U') R U2 R' U2 R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 110,
+      "alg": "R' U' R' U' R U R' U' R U2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 111,
+      "alg": "R' U' R2' U' R U2' R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 111,
+      "alg": "(U') R U D' R U2 R' D R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 112,
+      "alg": "(U') R U' R' U R U' R' S R2' S' R2",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 112,
+      "alg": "(U') R U' R' U2 R' U2 R2 U2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 112,
+      "alg": "(U) R U R' U R U R2' U' R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 114,
+      "alg": "R' U' R' U R2 U2 R' U2 R U' R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "LXS",
+      "group": "FRD",
+      "index": 116,
+      "alg": "R U R' U' R U2 R' U' R U R'",
+      "reason": "resolves to a different case than the primary"
     }
   ]
 }

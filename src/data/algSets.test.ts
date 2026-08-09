@@ -20,8 +20,8 @@ import idsBefore from './__fixtures__/case-ids-before-issue-10.json'
 import { allProgress, getProgress, resetDbForTests, setLearned } from '@/storage/db'
 
 describe('the algorithm set registry', () => {
-  it('ships ZBLL and COLL', () => {
-    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL', 'COLL'])
+  it('ships ZBLL, COLL, and LXS', () => {
+    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL', 'COLL', 'LXS'])
     expect(DEFAULT_ALG_SET).toBe('ZBLL')
   })
 
@@ -35,29 +35,33 @@ describe('the algorithm set registry', () => {
   it('falls back to the default for an id that is not registered', () => {
     expect(asAlgSetId('ZBLL')).toBe('ZBLL')
     expect(asAlgSetId('COLL')).toBe('COLL')
-    expect(asAlgSetId('LXS')).toBe('ZBLL')
+    expect(asAlgSetId('LXS')).toBe('LXS')
+    expect(asAlgSetId('UNKNOWN')).toBe('ZBLL')
     expect(asAlgSetId(null)).toBe('ZBLL')
     expect(asAlgSetId(42)).toBe('ZBLL')
   })
 })
 
 describe('the cases themselves', () => {
-  it('all belong to ZBLL or COLL, and every ZBLL case carries a known subset', () => {
+  it('all belong to ZBLL, COLL, or LXS, and every ZBLL case carries a known subset', () => {
     const subsets = ALG_SET_BY_ID.get('ZBLL')!.subsets
     for (const c of CASES) {
       if (c.algSet === 'ZBLL') {
         expect(subsets).toContain(c.subset)
+      } else if (c.algSet === 'COLL') {
+        expect(c.subset).toBe('')
       } else {
-        expect(c.algSet).toBe('COLL')
+        expect(c.algSet).toBe('LXS')
         expect(c.subset).toBe('')
       }
     }
   })
 
-  it('numbers 472 ZBLL and 40 COLL cases', () => {
-    expect(CASES.length).toBe(512)
+  it('numbers 472 ZBLL, 40 COLL, and 116 LXS cases', () => {
+    expect(CASES.length).toBe(628)
     expect(casesInAlgSet('ZBLL').length).toBe(472)
     expect(casesInAlgSet('COLL').length).toBe(40)
+    expect(casesInAlgSet('LXS').length).toBe(116)
   })
 
   it('keeps the measured per-subset counts', () => {

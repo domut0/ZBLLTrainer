@@ -239,5 +239,42 @@ export function llFaceletsAllAufs(pattern) {
   return AUF_ALGS.map((alg) => llFacelets(pattern.applyAlg(alg)));
 }
 
+// ---------------------------------------------------------------------------
+// Stage facelets for F2L-stage sets (LXS, etc.): 21 LL stickers + 7 FR/DR slot stickers.
+// ---------------------------------------------------------------------------
+const STAGE_SLOT_POSITIONS = [
+  { orbit: "EDGES", slot: 8, ori: 0 },   // 21: FR edge, F sticker
+  { orbit: "EDGES", slot: 8, ori: 1 },   // 22: FR edge, R sticker
+  { orbit: "CORNERS", slot: 4, ori: 1 }, // 23: DFR corner, F sticker
+  { orbit: "CORNERS", slot: 4, ori: 2 }, // 24: DFR corner, R sticker
+  { orbit: "CORNERS", slot: 4, ori: 0 }, // 25: DFR corner, D sticker
+  { orbit: "EDGES", slot: 5, ori: 1 },   // 26: DR edge, R sticker
+  { orbit: "EDGES", slot: 5, ori: 0 },   // 27: DR edge, D sticker
+];
+
+function readPositionsWithSign(pattern, positions, sign) {
+  return positions.map((pos) => {
+    const orbit = pos.orbit;
+    const n = orbit === "CORNERS" ? 3 : 2;
+    const od = pattern.patternData[orbit];
+    const piece = od.pieces[pos.slot];
+    const twist = od.orientation[pos.slot];
+    const sticker = (((pos.ori + sign * twist) % n) + n) % n;
+    return COLOUR[stickerFace[orbit][piece][sticker]];
+  }).join("");
+}
+
+/** The 28 stickers (21 LL + 7 slot) of a stage pattern. */
+export function stageFacelets(pattern) {
+  const ll = llFacelets(pattern);
+  const slot = readPositionsWithSign(pattern, STAGE_SLOT_POSITIONS, ORI_SIGN);
+  return ll + slot;
+}
+
+export function stageFaceletsAllAufs(pattern) {
+  return AUF_ALGS.map((alg) => stageFacelets(pattern.applyAlg(alg)));
+}
+
 export const FACELET_COLOURS = COLOUR;
 export const ORIENTATION_SIGN = ORI_SIGN;
+

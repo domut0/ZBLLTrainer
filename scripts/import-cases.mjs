@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
 import { KPattern } from "cubing/kpuzzle";
 import { cube3x3x3 } from "cubing/puzzles";
-import { llFaceletsAllAufs } from "./facelets.mjs";
+import { llFaceletsAllAufs, stageFaceletsAllAufs } from "./facelets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kpuzzle = await cube3x3x3.kpuzzle();
@@ -59,7 +59,10 @@ function normaliseAlg(raw) {
   let s = raw
     .replace(ZERO_WIDTH, " ")
     .replace(/[‘’ʼ′]/g, "'")   // curly apostrophes, prime
+    .replace(/\(\s*(U2|U'|U)\s*\)/g, " $1 ")       // AUF parens -> real move
     .replace(/\[\s*(U2|U'|U)\s*\]/g, " $1 ")       // AUF bracket -> real move
+    .replace(/([URFDLB])([URFDLB])/g, "$1 $2")       // split unspaced face moves e.g. UD'
+    .replace(/([URFDLB])([URFDLB])/g, "$1 $2")
     .replace(/[()]/g, " ")                          // grouping parens
     .replace(/\s+/g, " ")
     .trim();
@@ -79,7 +82,7 @@ function normaliseAlg(raw) {
 const ROTATIONS = [];
 for (const a of ["", "x", "x2", "x'", "z", "z'"]) {
   for (const b of ["", "y", "y2", "y'"]) {
-    ROTATIONS.push(`${a} ${b}`.trim());
+    ROTATIONS.push(a ? `${a} ${b}`.trim() : b);
   }
 }
 const ROTATION_ALGS = ROTATIONS.map((r) => (r ? new Alg(r) : new Alg("")));
@@ -93,7 +96,7 @@ function centresSolved(p) {
 // inverted algorithm. Appending U to the resulting pattern is post-multiplication,
 // which is not what "the sheet omitted a trailing AUF" means once you invert.
 // Brute-force 24 rotations x 4 AUFs as prefixes and keep whatever lands legal.
-function analyse(cleaned) {
+function analyse(cleaned, legalityFn = zbllLegality) {
   let invX;
   try {
     invX = new Alg(cleaned).invert();
@@ -106,14 +109,15 @@ function analyse(cleaned) {
       const prefix = AUF_ALGS[i] ? rot.concat(AUF_ALGS[i]) : rot;
       const p = SOLVED.applyAlg(prefix.concat(invX));
       if (!centresSolved(p)) continue;
-      if (legality(p)) continue;
+      const errStr = legalityFn(p);
+      if (errStr) continue;
       legal.push({ auf: i, ser: serialise(p), pattern: p });
     }
   }
   if (!legal.length) {
     // Report the most informative failure we saw with no correction applied.
     const plain = SOLVED.applyAlg(invX);
-    return { error: centresSolved(plain) ? (legality(plain) ?? "no legal orientation") : "cannot de-rotate" };
+    return { error: centresSolved(plain) ? (legalityFn(plain) ?? "no legal orientation") : "cannot de-rotate" };
   }
   const best = legal.reduce((a, b) => (a.ser <= b.ser ? a : b));
   return { id: best.ser, aufOffset: best.auf, state: best.pattern };
@@ -132,15 +136,23 @@ const serialise = (p) =>
 const AUF_ALGS = [null, new Alg("U"), new Alg("U2"), new Alg("U'")];
 
 // ---------------------------------------------------------------------------
-// Validation.
+// Validation: per-set validity predicates.
 // ---------------------------------------------------------------------------
 const U_IDX = [0, 1, 2, 3];
-function legality(p) {
+function zbllLegality(p) {
   const c = p.patternData.CORNERS;
   const e = p.patternData.EDGES;
   for (let i = 4; i < 8; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i} disturbed`;
   for (let i = 4; i < 12; i++) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i} disturbed`;
   for (const i of U_IDX) if (e.orientation[i] !== 0) return `LL edge ${i} flipped (not a ZBLL case)`;
+  return null;
+}
+
+function lxsLegality(p) {
+  const c = p.patternData.CORNERS;
+  const e = p.patternData.EDGES;
+  for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i} disturbed`;
+  for (const i of [4, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i} disturbed`;
   return null;
 }
 
@@ -196,7 +208,7 @@ for (const [file, setName, expected] of SETS) {
       // resolves establishes the identity; later ones that disagree are dropped
       // with a warning, because they are almost always exotic notation this
       // importer mis-reads rather than a genuinely different case.
-      const res = analyse(cleaned);
+      const res = analyse(cleaned, zbllLegality);
       if (res.error) {
         warnings.push({ set: setName, group, index: indexInGroup, alg: line, reason: res.error });
         continue;
@@ -437,9 +449,128 @@ if (shortCollCases.length) {
 const zbllCount = cases.length;
 cases.push(...collCases);
 
+// ---------------------------------------------------------------------------
+// Import LXS cases (116 cases across 6 column-major sheets)
+// ---------------------------------------------------------------------------
+const LXS_SHEETS = [
+  ["lxs-ufr.csv", "UFR", 30],
+  ["lxs-rfu.csv", "RFU", 30],
+  ["lxs-fur.csv", "FUR", 30],
+  ["lxs-dfr.csv", "DFR", 8],
+  ["lxs-rdf.csv", "RDF", 9],
+  ["lxs-frd.csv", "FRD", 9],
+];
+
+const lxsCases = [];
+
+for (const [file, sheetName, expectedCount] of LXS_SHEETS) {
+  const text = readFileSync(join(ROOT, "data", "source", "apb", file), "utf8");
+  const rows = parseCsv(text);
+  let currentSection = "";
+  let sheetImported = 0;
+
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    const firstCell = (row[0] ?? "").trim();
+    if (firstCell.startsWith("DR edge at")) {
+      currentSection = firstCell;
+      continue;
+    }
+
+    const headersInRow = [];
+    for (let c = 0; c < row.length; c++) {
+      const cell = (row[c] ?? "").trim();
+      const m = /^(\d+):\s*([A-Z]{2})\/([A-Z]{2})$/.exec(cell);
+      if (m) {
+        headersInRow.push({ col: c, caseNum: parseInt(m[1], 10), drEdge: m[2], frEdge: m[3], raw: cell });
+      }
+    }
+
+    if (headersInRow.length > 0) {
+      for (const h of headersInRow) {
+        const sourceAlgs = [];
+        let blankCount = 0;
+        for (let rSub = r + 1; rSub < rows.length; rSub++) {
+          const subRow = rows[rSub];
+          if (!subRow) { blankCount++; if (blankCount > 10) break; continue; }
+          const subFirst = (subRow[0] ?? "").trim();
+          if (subFirst.startsWith("DR edge at")) break;
+          let isHeader = false;
+          for (let c = 0; c < subRow.length; c++) {
+            if (/^(\d+):\s*([A-Z]{2})\/([A-Z]{2})$/.exec((subRow[c] ?? "").trim())) {
+              isHeader = true; break;
+            }
+          }
+          if (isHeader) break;
+
+          const cellVal = (subRow[h.col] ?? "").trim();
+          if (cellVal) {
+            blankCount = 0;
+            for (const line of cellVal.split("\n")) {
+              const cleanedLine = line.trim();
+              if (cleanedLine) sourceAlgs.push(cleanedLine);
+            }
+          } else {
+            blankCount++;
+            if (blankCount > 10) break;
+          }
+        }
+
+        const algs = [];
+        let caseId = null;
+        let caseState = null;
+
+        for (const line of sourceAlgs) {
+          const cleaned = normaliseAlg(line);
+          if (!cleaned) continue;
+          const res = analyse(cleaned, lxsLegality);
+          if (res.error) {
+            warnings.push({ set: "LXS", group: sheetName, index: h.caseNum, alg: line, reason: res.error });
+            continue;
+          }
+          if (caseId === null) { caseId = res.id; caseState = res.state; }
+          else if (res.id !== caseId) {
+            warnings.push({ set: "LXS", group: sheetName, index: h.caseNum, alg: line, reason: "resolves to a different case than the primary" });
+            continue;
+          }
+          algs.push({ alg: cleaned, aufOffset: res.aufOffset });
+        }
+
+        if (!algs.length) {
+          rejects.push({ set: "LXS", group: sheetName, index: h.caseNum, row: r + 1, reason: "no usable algorithm" });
+          continue;
+        }
+
+        lxsCases.push({
+          id: caseId,
+          algSet: "LXS",
+          subset: "",
+          group: sheetName,
+          indexInGroup: h.caseNum,
+          displayName: `LXS #${h.caseNum}`,
+          state: toCubeState(caseState),
+          facelets: stageFaceletsAllAufs(caseState),
+          algs,
+        });
+        sheetImported++;
+      }
+    }
+  }
+
+  console.log(`LXS ${sheetName.padEnd(3)} cases imported ${String(sheetImported).padStart(3)}  expected ${expectedCount}${sheetImported === expectedCount ? "" : "   <-- MISMATCH"}`);
+}
+
+if (lxsCases.length !== 116) {
+  console.error(`\n[ERROR] LXS import count mismatch! Got ${lxsCases.length}, expected 116`);
+  process.exit(1);
+}
+
+cases.push(...lxsCases);
+
 console.log(`\ntotal ZBLL imported: ${zbllCount} (expect 472)`);
 console.log(`total COLL derived: ${collCases.length} (expect 40)`);
-console.log(`total cases: ${cases.length} (expect 512)`);
+console.log(`total LXS imported: ${lxsCases.length} (expect 116)`);
+console.log(`total cases: ${cases.length} (expect 628)`);
 console.log(`unique case ids: ${new Set(cases.map((c) => c.id)).size}`);
 console.log(`fixes applied: ${fixesUsed.length}`);
 console.log(`rejects: ${rejects.length}`);
@@ -458,4 +589,5 @@ console.log(`cases with no alternatives left: ${cases.filter((c) => c.algs.lengt
 writeFileSync(join(ROOT, "data", "cases.json"), JSON.stringify(cases, null, 0));
 writeFileSync(join(ROOT, "data", "rejects.json"), JSON.stringify({ rejects, warnings }, null, 2));
 console.log("\nwrote data/cases.json and data/rejects.json");
+
 

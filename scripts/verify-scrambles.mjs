@@ -26,8 +26,13 @@ const ser = (p) =>
     p.patternData.EDGES.pieces, p.patternData.EDGES.orientation,
   ]);
 
-function legality(p) {
+function legality(p, algSet) {
   const c = p.patternData.CORNERS, e = p.patternData.EDGES;
+  if (algSet === "LXS") {
+    for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i}`;
+    for (const i of [4, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i}`;
+    return null;
+  }
   for (let i = 4; i < 8; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i}`;
   for (let i = 4; i < 12; i++) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i}`;
   for (let i = 0; i < 4; i++) if (e.orientation[i] !== 0) return `LL edge ${i} flipped`;
@@ -62,7 +67,7 @@ for (const c of sample) {
   for (const entry of list.slice(0, 3)) {
     const alg = new Alg(entry.scramble);
     const p = SOLVED.applyAlg(alg);
-    const bad = legality(p);
+    const bad = legality(p, c.algSet);
     if (bad) { illegal++; if (illegal <= 3) console.log(`  ILLEGAL ${c.displayName}: ${bad} — ${entry.scramble}`); }
     let expectedId;
     if (c.algSet === "COLL") {
@@ -95,3 +100,4 @@ console.log(`cases with duplicates:    ${dupes}`);
 console.log(`move-count range:         ${Math.min(...lens)}-${Math.max(...lens)}`);
 console.log(`degenerate notation:      ${degenerate.length}`);
 console.log(`\n${illegal === 0 && idMismatch === 0 && dupes === 0 && degenerate.length === 0 ? "PASS" : "FAIL"}`);
+process.exit(illegal === 0 && idMismatch === 0 && dupes === 0 && degenerate.length === 0 ? 0 : 1);

@@ -65,6 +65,7 @@ const applyAllPattern = (scramble: string, reveal: string) =>
 const sample = [
   ...CASES.filter((c, i) => c.algSet === 'ZBLL' && i % 7 === 0),
   ...CASES.filter((c) => c.algSet === 'COLL'),
+  ...CASES.filter((c, i) => c.algSet === 'LXS' && i % 5 === 0),
 ]
 
 // scrambles.json is generated grouped by AUF — the first five entries of every
@@ -152,6 +153,23 @@ describe('revealAlgorithm', () => {
 
   it('leaves an already-canonical algorithm alone', () => {
     expect(revealAlgorithm({ alg: "R U R'", aufOffset: 0 }, 0)).toBe("R U R'")
+  })
+
+  it('correctly reveals and solves LXS cases containing wide/slice moves across all AUFs', () => {
+    const wideCase = CASES.find(
+      (c) => c.algSet === 'LXS' && c.algs.some((a) => /\b[rfMSu]\b/.test(a.alg)),
+    )
+    expect(wideCase, 'found LXS case containing wide/slice move').toBeDefined()
+    for (const s of acrossAufs(wideCase!.id)) {
+      for (const a of wideCase!.algs) {
+        const reveal = revealAlgorithm(a, s.auf)
+        const resultPattern = applyAllPattern(s.scramble, reveal)
+        expect(
+          isSolved(JSON.stringify(resultPattern)),
+          `wide-alg case ${wideCase!.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal: ${reveal}`,
+        ).toBe(true)
+      }
+    }
   })
 
   it('prepends the inverse of the served AUF', () => {

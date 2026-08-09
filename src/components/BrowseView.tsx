@@ -9,7 +9,7 @@ import {
   type TrainerCase,
 } from '@/data'
 import { allProgress, toggleLearned, DEFAULT_PROGRESS, type ProgressRecord } from '@/storage/db'
-import { LLDiagram } from '@/components/LLDiagram'
+import { CaseDiagram } from '@/components/CaseDiagram'
 import { CaseDetail } from '@/components/CaseDetail'
 
 /**
@@ -379,7 +379,7 @@ function CaseGrid({
               <span className="absolute top-2 left-2 text-[10px] font-extrabold tracking-tight text-zinc-500">
                 #{c.indexInGroup}
               </span>
-              <LLDiagram facelets={c.facelets[0]} className="w-14 h-14" />
+              <CaseDiagram algSet={c.algSet} facelets={c.facelets[0]} className="w-14 h-14" />
             </button>
             <button
               onClick={(e) => {

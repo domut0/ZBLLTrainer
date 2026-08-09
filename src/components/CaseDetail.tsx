@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { TrainerCase } from '@/data/types'
-import { LLDiagram } from '@/components/LLDiagram'
+import { CaseDiagram } from '@/components/CaseDiagram'
 import {
   setCustomAlg,
   setPrimaryAlgIndex,
@@ -101,7 +101,7 @@ export function CaseDetail({ c, progress, onProgressChange, onBack }: CaseDetail
       {/* Large Diagram */}
       <div className="flex justify-center my-2">
         <div className="w-52 h-52 p-4 bg-zinc-900/20 border border-zinc-800/60 rounded-3xl flex items-center justify-center shadow-inner">
-          <LLDiagram facelets={c.facelets[0]} className="w-44 h-44" label={`Diagram for ${c.displayName}`} />
+          <CaseDiagram algSet={c.algSet} facelets={c.facelets[0]} className="w-44 h-44" label={`Diagram for ${c.displayName}`} />
         </div>
       </div>
 

@@ -6,30 +6,34 @@ import { FACELET_COUNT, U_CENTRE_INDEX } from './types'
 // Repeating a thin slice here catches the other failure: shipping a stale or
 // half-regenerated data/cases.json into the app.
 describe('case data', () => {
-  it('has all 512 cases with unique ids', () => {
-    expect(CASES).toHaveLength(512)
-    expect(CASES_BY_ID.size).toBe(512)
+  it('has all 628 cases with unique ids', () => {
+    expect(CASES).toHaveLength(628)
+    expect(CASES_BY_ID.size).toBe(628)
   })
 
-  it('gives every case four diagrams of 21 stickers', () => {
+  it('gives every case four diagrams of valid sticker length', () => {
     for (const c of CASES) {
       expect(c.facelets, c.displayName).toHaveLength(4)
-      for (const f of c.facelets) expect(f, c.displayName).toHaveLength(FACELET_COUNT)
+      const expectedLen = c.algSet === 'LXS' ? 28 : FACELET_COUNT
+      for (const f of c.facelets) expect(f, c.displayName).toHaveLength(expectedLen)
     }
   })
 
-  it('never shows the bottom colour, and always shows an oriented last layer', () => {
+  it('never shows the bottom colour for LL sets, and always shows an oriented last layer', () => {
     for (const c of CASES) {
       for (const f of c.facelets) {
-        expect(f, `${c.displayName}: ${f}`).not.toContain('W')
         if (c.algSet === 'ZBLL') {
+          expect(f, `${c.displayName}: ${f}`).not.toContain('W')
           for (const i of [1, 3, 5, 7, U_CENTRE_INDEX]) {
             expect(f[i], `${c.displayName} index ${i}`).toBe('Y')
           }
         } else if (c.algSet === 'COLL') {
+          expect(f, `${c.displayName}: ${f}`).not.toContain('W')
           for (const i of [1, 3, 5, 7]) {
             expect(f[i], `${c.displayName} index ${i}`).toBe('?')
           }
+          expect(f[U_CENTRE_INDEX], `${c.displayName} index ${U_CENTRE_INDEX}`).toBe('Y')
+        } else if (c.algSet === 'LXS') {
           expect(f[U_CENTRE_INDEX], `${c.displayName} index ${U_CENTRE_INDEX}`).toBe('Y')
         }
       }
