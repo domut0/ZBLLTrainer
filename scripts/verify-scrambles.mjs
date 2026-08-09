@@ -33,6 +33,11 @@ function legality(p, algSet) {
     for (const i of [4, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i}`;
     return null;
   }
+  if (algSet === "EO") {
+    for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i}`;
+    for (const i of [4, 6, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i}`;
+    return null;
+  }
   for (let i = 4; i < 8; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i}`;
   for (let i = 4; i < 12; i++) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i}`;
   for (let i = 0; i < 4; i++) if (e.orientation[i] !== 0) return `LL edge ${i} flipped`;
@@ -107,6 +112,15 @@ for (const c of sample) {
         temp = temp.applyAlg(AUF[1]);
       }
       expectedId = "LXS:" + best;
+    } else if (c.algSet === "EO") {
+      let best = null;
+      let temp = p;
+      for (let i = 0; i < 4; i++) {
+        const s = JSON.stringify(temp.patternData.EDGES.orientation);
+        if (best === null || s < best) best = s;
+        temp = temp.applyAlg(AUF[1]);
+      }
+      expectedId = "EO:" + best;
     } else {
       expectedId = idOf(alg);
     }

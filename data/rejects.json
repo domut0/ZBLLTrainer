@@ -147,6 +147,13 @@
       "index": 86,
       "alg": "R' D' R U' R' D R U R U' R",
       "reason": "F2L corner 7 disturbed"
+    },
+    {
+      "set": "EO",
+      "group": "UF/UL/UB/UR",
+      "index": 6,
+      "alg": "r U' r' S' U r U r' S' (for misoriented DR)",
+      "reason": "cannot de-rotate"
     }
   ]
 }

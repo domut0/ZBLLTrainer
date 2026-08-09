@@ -3,6 +3,33 @@
 Frozen ahead of the importer so dependent work can start. Issue 02 must produce
 exactly this; Issues 03, 06 and 07 may rely on it.
 
+**Amended 2026-08-09 (Issue 13)** — added the `EO` set from APB: 11 cases, 33 of
+the sheet's 34 algorithms.
+
+**An EO case is the edge-orientation vector, and nothing else**, canonicalised
+over the four AUF rotations. Measured over the sheet's own alternatives: 23 of 23
+agree on edge orientation alone, and only 1 of 23 agrees on the full cube state,
+so a full-state identity would keep the right 11 cases and discard 22 of 23
+alternatives. All 23 are interchangeable, so one scramble per case is enough.
+
+The centres check stays ON for this import. Skipping it lets an id be chosen in a
+rotated frame, and a scramble is only face turns, so the id would not be
+recoverable from the cube the user is served — `verify-scrambles.mjs` reported 12
+mismatches when it was off. 33 of the 34 algorithms resolve with centres solved
+and all 11 cases still agree on one id. The one dropped is
+`r U' r' S' U r U r' S'`, which the sheet itself annotates "(for misoriented DR)"
+— a conditional algorithm for a different case.
+
+Orientation is not a colour: an oriented and a misoriented edge can present the
+same top sticker, so `AlgSetDef.diagram` selects `'eo'` and the 28-character
+string carries `'0'` for oriented and `'1'` for misoriented at the six edge
+positions that can flip — slots 0, 1, 2, 3 (last layer) plus 5 (DR) and 8 (FR).
+Every other sticker is `'?'`. An EO diagram therefore has no colour in it at all,
+which is correct: identity is orientation, so every colour is a don't-care.
+
+`scripts/verify-eo-reveal.mjs` checks all 132 case/algorithm/AUF combinations
+exhaustively.
+
 **Amended 2026-08-09 (Issue 12)** — added the `LXS` set from APB: 116 cases
 across six source sheets, globally numbered 1–116, which is a free correctness
 check on the parse. Introduced **stage facelets** for F2L-stage sets: a
@@ -132,12 +159,12 @@ interface TrainerCase {
   algs: CaseAlg[];
 }
 
-type CasesFile = TrainerCase[]; // 628 entries: 472 ZBLL + 40 derived COLL + 116 LXS
+type CasesFile = TrainerCase[]; // 639 entries: 472 ZBLL + 40 derived COLL + 116 LXS + 11 EO
 ```
 
 ### `FaceletString`
 
-21 characters for last-layer sets (ZBLL, COLL), 28 characters for stage sets (LXS). One per visible sticker. Colours are single letters:
+21 characters for last-layer sets (ZBLL, COLL), 28 characters for stage sets (LXS, EO). One per visible sticker. Colours are single letters or orientation markers ('0'/'1'):
 
 | Letter | Colour | Face |
 |---|---|---|

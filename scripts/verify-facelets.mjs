@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
 import { KPattern } from "cubing/kpuzzle";
 import { cube3x3x3 } from "cubing/puzzles";
-import { llFacelets, stageFacelets, FACELET_COLOURS } from "./facelets.mjs";
+import { llFacelets, stageFacelets, eoFacelets, FACELET_COLOURS } from "./facelets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kpuzzle = await cube3x3x3.kpuzzle();
@@ -75,7 +75,7 @@ if (llFacelets(SOLVED) !== solvedExpected) {
 // ---------------------------------------------------------------------------
 // 2. Dataset-wide invariants. These hold for every case by definition.
 // ---------------------------------------------------------------------------
-const ALPHABET = new Set([...Object.values(FACELET_COLOURS), '?']);
+const ALPHABET = new Set([...Object.values(FACELET_COLOURS), '?', '0', '1']);
 let checked = 0;
 const seen = new Map();
 
@@ -90,7 +90,7 @@ for (const c of cases) {
     const f = c.facelets[auf];
     checked++;
 
-    const expectedLen = c.algSet === "LXS" ? 28 : 21;
+    const expectedLen = (c.algSet === "LXS" || c.algSet === "EO") ? 28 : 21;
     if (typeof f !== "string" || f.length !== expectedLen) { report(c.displayName, `auf ${auf}: length ${f?.length}, expected ${expectedLen}`); continue; }
     if ([...f].some((ch) => !ALPHABET.has(ch))) { report(c.displayName, `auf ${auf}: bad character in "${f}"`); continue; }
 
@@ -127,12 +127,19 @@ for (const c of cases) {
       if (count('?') !== 20) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 20`);
       const colouredCount = count(Y) + count(G) + count(B) + count(O) + count(R) + count(FACELET_COLOURS.D);
       if (colouredCount !== 8) report(c.displayName, `auf ${auf}: ${colouredCount} coloured stickers, expected 8`);
+    } else if (c.algSet === "EO") {
+      // EO set: 28 stickers, 16 '?' and 12 marked edge stickers ('0' or '1')
+      if (count('?') !== 16) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 16`);
+      const markedCount = count('0') + count('1');
+      if (markedCount !== 12) report(c.displayName, `auf ${auf}: ${markedCount} marked edge stickers, expected 12`);
     }
 
     // Recompute from the stored state by an independent route.
     let expected;
     if (c.algSet === "LXS") {
       expected = stageFacelets(state.applyAlg(AUF_ALGS[auf]));
+    } else if (c.algSet === "EO") {
+      expected = eoFacelets(state.applyAlg(AUF_ALGS[auf]));
     } else {
       expected = llFacelets(state.applyAlg(AUF_ALGS[auf]));
       if (c.algSet === "COLL") {
@@ -210,9 +217,11 @@ for (const c of cases) {
     let matchedAt = -1;
     for (let r = 0; r < ROTATIONS.length; r++) {
       const derived = SOLVED.applyAlg(ROTATIONS[r].concat(auf).concat(inv));
-      if (!centresSolved(derived)) continue;
+      if (c.algSet !== "EO" && !centresSolved(derived)) continue;
       let faceletRep;
-      if (c.algSet === "LXS") {
+      if (c.algSet === "EO") {
+        faceletRep = eoFacelets(derived);
+      } else if (c.algSet === "LXS") {
         faceletRep = stageFacelets(derived);
       } else {
         faceletRep = llFacelets(derived);
@@ -243,7 +252,9 @@ for (const c of sample) {
   for (const s of (scrambles[c.id] ?? []).slice(0, 4)) {
     const state = SOLVED.applyAlg(new Alg(s.scramble));
     let stateFacelets;
-    if (c.algSet === "LXS") {
+    if (c.algSet === "EO") {
+      stateFacelets = eoFacelets(state);
+    } else if (c.algSet === "LXS") {
       stateFacelets = stageFacelets(state);
     } else {
       stateFacelets = llFacelets(state);

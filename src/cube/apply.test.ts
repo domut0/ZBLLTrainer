@@ -34,11 +34,14 @@ const fromPattern = (p: typeof REFERENCE_SOLVED): CubeState => ({
 const everyAlg = CASES.flatMap((c) => c.algs.map((a) => ({ case: c, alg: a })))
 
 describe('the client-side cube', () => {
+  // 977 ZBLL + 472 COLL + 265 LXS + 33 EO. A guard, not a fact about cubing:
+  // if a parser silently stops reading a sheet the count is the first thing to
+  // move, and it has already caught that twice on this project.
   it('has every algorithm in the dataset to check against', () => {
-    expect(everyAlg.length).toBe(1714)
+    expect(everyAlg.length).toBe(1747)
   })
 
-  it('agrees with cubing.js on all 1449 algorithms', () => {
+  it('agrees with cubing.js on every algorithm in the dataset', () => {
     for (const { alg } of everyAlg) {
       const parsed = parseAlg(alg.alg)
       expect(parsed.ok, `failed to parse "${alg.alg}"`).toBe(true)

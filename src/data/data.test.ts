@@ -6,15 +6,15 @@ import { FACELET_COUNT, U_CENTRE_INDEX } from './types'
 // Repeating a thin slice here catches the other failure: shipping a stale or
 // half-regenerated data/cases.json into the app.
 describe('case data', () => {
-  it('has all 628 cases with unique ids', () => {
-    expect(CASES).toHaveLength(628)
-    expect(CASES_BY_ID.size).toBe(628)
+  it('has all 639 cases with unique ids', () => {
+    expect(CASES).toHaveLength(639)
+    expect(CASES_BY_ID.size).toBe(639)
   })
 
   it('gives every case four diagrams of valid sticker length', () => {
     for (const c of CASES) {
       expect(c.facelets, c.displayName).toHaveLength(4)
-      const expectedLen = c.algSet === 'LXS' ? 28 : FACELET_COUNT
+      const expectedLen = c.algSet === 'LXS' || c.algSet === 'EO' ? 28 : FACELET_COUNT
       for (const f of c.facelets) expect(f, c.displayName).toHaveLength(expectedLen)
     }
   })
@@ -35,6 +35,8 @@ describe('case data', () => {
           expect(f[U_CENTRE_INDEX], `${c.displayName} index ${U_CENTRE_INDEX}`).toBe('Y')
         } else if (c.algSet === 'LXS') {
           expect(f[U_CENTRE_INDEX], `${c.displayName} index ${U_CENTRE_INDEX}`).toBe('Y')
+        } else if (c.algSet === 'EO') {
+          expect(f[U_CENTRE_INDEX], `${c.displayName} index ${U_CENTRE_INDEX}`).toBe('?')
         }
       }
     }

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
 import { KPattern } from "cubing/kpuzzle";
 import { cube3x3x3 } from "cubing/puzzles";
-import { llFaceletsAllAufs, stageFaceletsAllAufs } from "./facelets.mjs";
+import { llFaceletsAllAufs, stageFaceletsAllAufs, eoFaceletsAllAufs } from "./facelets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kpuzzle = await cube3x3x3.kpuzzle();
@@ -59,10 +59,11 @@ function normaliseAlg(raw, isApb = false) {
   let s = raw
     .replace(ZERO_WIDTH, " ")
     .replace(/[‘’ʼ′]/g, "'")   // curly apostrophes, prime
-    .replace(/\(\s*(U2|U'|U)\s*\)/g, " $1 ")       // AUF parens -> real move
-    .replace(/\[\s*(U2|U'|U)\s*\]/g, " $1 ");       // AUF bracket -> real move
+    .replace(/\(\s*(U2'?|U'|U)\s*\)/gi, " $1 ")       // AUF parens -> real move
+    .replace(/\[\s*(U2'?|U'|U)\s*\]/gi, " $1 ");       // AUF bracket -> real move
   if (isApb) {
     s = s
+      .replace(/\s*\([a-zA-Z\s]{4,}\)\s*/g, " ")      // parenthesised prose notes like (for misoriented DR)
       .replace(/([URFDLB])([URFDLB])/g, "$1 $2")       // split unspaced face moves e.g. UD'
       .replace(/([URFDLB])([URFDLB])/g, "$1 $2");
   }
@@ -100,7 +101,7 @@ function centresSolved(p) {
 // inverted algorithm. Appending U to the resulting pattern is post-multiplication,
 // which is not what "the sheet omitted a trailing AUF" means once you invert.
 // Brute-force 24 rotations x 4 AUFs as prefixes and keep whatever lands legal.
-function analyse(cleaned, legalityFn = zbllLegality, keyFn = serialise) {
+function analyse(cleaned, legalityFn = zbllLegality, keyFn = serialise, checkCenters = true) {
   let invX;
   try {
     invX = new Alg(cleaned).invert();
@@ -112,7 +113,7 @@ function analyse(cleaned, legalityFn = zbllLegality, keyFn = serialise) {
     for (let i = 0; i < 4; i++) {
       const prefix = AUF_ALGS[i] ? rot.concat(AUF_ALGS[i]) : rot;
       const p = SOLVED.applyAlg(prefix.concat(invX));
-      if (!centresSolved(p)) continue;
+      if (checkCenters && !centresSolved(p)) continue;
       const errStr = legalityFn(p);
       if (errStr) continue;
       legal.push({ auf: i, ser: keyFn(p), pattern: p });
@@ -121,7 +122,7 @@ function analyse(cleaned, legalityFn = zbllLegality, keyFn = serialise) {
   if (!legal.length) {
     // Report the most informative failure we saw with no correction applied.
     const plain = SOLVED.applyAlg(invX);
-    return { error: centresSolved(plain) ? (legalityFn(plain) ?? "no legal orientation") : "cannot de-rotate" };
+    return { error: (checkCenters && !centresSolved(plain)) ? "cannot de-rotate" : (legalityFn(plain) ?? "no legal orientation") };
   }
   const best = legal.reduce((a, b) => (a.ser <= b.ser ? a : b));
   return { id: best.ser, aufOffset: best.auf, state: best.pattern };
@@ -158,6 +159,22 @@ function lxsLegality(p) {
   for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i} disturbed`;
   for (const i of [4, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i} disturbed`;
   return null;
+}
+
+function eoLegality(p) {
+  const c = p.patternData.CORNERS;
+  const e = p.patternData.EDGES;
+  for (const i of [5, 6, 7]) {
+    if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i} disturbed`;
+  }
+  for (const i of [4, 6, 9, 10, 11]) {
+    if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i} disturbed`;
+  }
+  return null;
+}
+
+function eoKey(p) {
+  return "EO:" + JSON.stringify(p.patternData.EDGES.orientation);
 }
 
 // The DFR corner is corner piece 4. The edges belonging at DR and FR are
@@ -592,10 +609,122 @@ if (lxsCases.length !== 116) {
 
 cases.push(...lxsCases);
 
+// ---------------------------------------------------------------------------
+// Import EO cases (11 cases from data/source/apb/eopair-dbr.csv)
+// ---------------------------------------------------------------------------
+const eoCases = [];
+const eoText = readFileSync(join(ROOT, "data", "source", "apb", "eopair-dbr.csv"), "utf8");
+const eoRows = parseCsv(eoText);
+
+const eoColumns = [];
+for (let r = 0; r < eoRows.length; r++) {
+  const row = eoRows[r];
+  if (!row) continue;
+  
+  const isHeader = row.some((c) => c.trim()) && row.filter((c) => c.trim()).every((c) => /^([A-Z]{2}\/)+[A-Z]{2}$/.test(c.trim()));
+  if (isHeader) {
+    for (let c = 0; c < row.length; c++) {
+      const headerName = row[c].trim();
+      if (!headerName) continue;
+      
+      const colAlgs = [];
+      for (let rSub = r + 1; rSub < eoRows.length; rSub++) {
+        const subRow = eoRows[rSub];
+        if (!subRow || !subRow.some((cell) => cell.trim())) break; // bound parse to populated block
+        const cellVal = (subRow[c] ?? "").trim();
+        if (cellVal) {
+          colAlgs.push(cellVal);
+        }
+      }
+      eoColumns.push({ headerName, colAlgs });
+    }
+  }
+}
+
+if (eoColumns.length !== 11) {
+  console.error(`\n[ERROR] EO header column count mismatch! Got ${eoColumns.length}, expected 11`);
+  process.exit(1);
+}
+
+let eoIdx = 0;
+for (const col of eoColumns) {
+  eoIdx++;
+  const expectedFlippedCount = col.headerName.split("/").length;
+  const algs = [];
+  let primaryId = null;
+  let caseState = null;
+  
+  for (const rawAlg of col.colAlgs) {
+    const cleaned = normaliseAlg(rawAlg, true);
+    if (!cleaned) continue;
+    // The centres check stays ON, unlike an earlier draft of this importer.
+    //
+    // Skipping it lets a case id be chosen in a rotated frame, and a scramble is
+    // made of face turns, which can never rotate the cube. The id then is not
+    // recoverable from the cube the user is served — which is exactly what
+    // verify-scrambles.mjs sets out to check, and it reported 12 mismatches.
+    //
+    // 33 of the 34 algorithms resolve with centres solved, and all 11 cases still
+    // agree on one id. The one that does not is `r U' r' S' U r U r' S'`, the
+    // cell the sheet itself annotates "(for misoriented DR)" — a conditional
+    // algorithm for a different case, so dropping it is right rather than a loss.
+    const res = analyse(cleaned, eoLegality, eoKey);
+    if (res.error) {
+      warnings.push({ set: "EO", group: col.headerName, index: eoIdx, alg: rawAlg, reason: res.error });
+      continue;
+    }
+    if (primaryId === null) {
+      primaryId = res.id;
+      caseState = res.state;
+      // Every header's named-edge count equals the number of flipped slots in its first algorithm. Assert it.
+      const flippedCount = res.state.patternData.EDGES.orientation.filter((v) => v !== 0).length;
+      if (flippedCount !== expectedFlippedCount) {
+        console.error(`\n[ERROR] EO case #${eoIdx} (${col.headerName}) flipped edge count mismatch! Got ${flippedCount}, expected ${expectedFlippedCount}`);
+        process.exit(1);
+      }
+    } else if (res.id !== primaryId) {
+      warnings.push({ set: "EO", group: col.headerName, index: eoIdx, alg: rawAlg, reason: "resolves to a different case than the primary" });
+      continue;
+    }
+    algs.push({ alg: cleaned, aufOffset: res.aufOffset });
+  }
+
+  if (!algs.length) {
+    rejects.push({ set: "EO", group: col.headerName, index: eoIdx, row: 0, reason: "no usable algorithm" });
+    continue;
+  }
+
+  eoCases.push({
+    id: primaryId,
+    algSet: "EO",
+    subset: "",
+    group: col.headerName,
+    indexInGroup: eoIdx,
+    displayName: `EO #${eoIdx}`,
+    state: toCubeState(caseState),
+    facelets: eoFaceletsAllAufs(caseState),
+    algs,
+  });
+}
+
+const eoAlgCount = eoCases.reduce((n, c) => n + c.algs.length, 0);
+// 33 of the sheet's 34, not 34: the one dropped is annotated "(for misoriented
+// DR)" in the source and resolves in no solved-centre frame. See the note at the
+// analyse() call above.
+console.log(`EO cases imported: ${eoCases.length} (expect 11), algs retained: ${eoAlgCount} (expect 33 of the sheet's 34)`);
+
+if (eoCases.length !== 11 || eoAlgCount !== 33) {
+  console.error(`\n[ERROR] EO import verification failed! Cases: ${eoCases.length}/11, Algs: ${eoAlgCount}/34`);
+  process.exit(1);
+}
+
+cases.push(...eoCases);
+
 console.log(`\ntotal ZBLL imported: ${zbllCount} (expect 472)`);
 console.log(`total COLL derived: ${collCases.length} (expect 40)`);
 console.log(`total LXS imported: ${lxsCases.length} (expect 116)`);
-console.log(`total cases: ${cases.length} (expect 628)`);
+console.log(`total EO imported: ${eoCases.length} (expect 11)`);
+console.log(`total cases: ${cases.length} (expect 639)`);
 console.log(`unique case ids: ${new Set(cases.map((c) => c.id)).size}`);
 console.log(`fixes applied: ${fixesUsed.length}`);
 console.log(`rejects: ${rejects.length}`);
@@ -614,5 +743,6 @@ console.log(`cases with no alternatives left: ${cases.filter((c) => c.algs.lengt
 writeFileSync(join(ROOT, "data", "cases.json"), JSON.stringify(cases, null, 0));
 writeFileSync(join(ROOT, "data", "rejects.json"), JSON.stringify({ rejects, warnings }, null, 2));
 console.log("\nwrote data/cases.json and data/rejects.json");
+
 
 

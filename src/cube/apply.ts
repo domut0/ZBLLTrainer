@@ -224,6 +224,10 @@ function lxsKey(s: CubeState): string {
   ])
 }
 
+function eoKey(s: CubeState): string {
+  return 'EO:' + JSON.stringify(s.edges.orientation)
+}
+
 function matcherFor(algSet: AlgSetId): (state: CubeState, target: CubeState) => boolean {
   if (algSet === 'COLL') {
     return (state, target) => {
@@ -245,6 +249,18 @@ function matcherFor(algSet: AlgSetId): (state: CubeState, target: CubeState) => 
         if (state.edges.pieces[i] !== i || state.edges.orientation[i] !== 0) return false
       }
       return lxsKey(state) === lxsKey(target)
+    }
+  }
+
+  if (algSet === 'EO') {
+    return (state, target) => {
+      for (let i = 5; i <= 7; i += 1) {
+        if (state.corners.pieces[i] !== i || state.corners.orientation[i] !== 0) return false
+      }
+      for (const i of [4, 6, 9, 10, 11]) {
+        if (state.edges.pieces[i] !== i || state.edges.orientation[i] !== 0) return false
+      }
+      return eoKey(state) === eoKey(target)
     }
   }
 

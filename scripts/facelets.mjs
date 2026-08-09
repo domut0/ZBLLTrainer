@@ -288,6 +288,36 @@ export function stageFaceletsAllAufs(pattern) {
   return AUF_ALGS.map((alg) => stageFacelets(pattern.applyAlg(alg)));
 }
 
+// ---------------------------------------------------------------------------
+// EO facelets for Edge Orientation set (28 stickers: 21 LL + 7 slot).
+// Non-case stickers are '?'. The 6 edge slots (0, 1, 2, 3, 5, 8) carry '0' for
+// oriented and '1' for misoriented/flipped, derived from EDGES.orientation.
+// ---------------------------------------------------------------------------
+const EO_EDGE_POSITIONS = [
+  { slot: 0, primaryIdx: 7, sideIdx: 16 },   // UF
+  { slot: 1, primaryIdx: 5, sideIdx: 12 },   // UR
+  { slot: 2, primaryIdx: 1, sideIdx: 10 },   // UB
+  { slot: 3, primaryIdx: 3, sideIdx: 18 },   // UL
+  { slot: 5, primaryIdx: 26, sideIdx: 27 },  // DR
+  { slot: 8, primaryIdx: 21, sideIdx: 22 },  // FR
+];
+
+export function eoFacelets(pattern) {
+  const chars = new Array(28).fill("?");
+  const eOri = pattern.patternData.EDGES.orientation;
+  for (const pos of EO_EDGE_POSITIONS) {
+    const val = eOri[pos.slot] === 0 ? "0" : "1";
+    chars[pos.primaryIdx] = val;
+    chars[pos.sideIdx] = val;
+  }
+  return chars.join("");
+}
+
+export function eoFaceletsAllAufs(pattern) {
+  return AUF_ALGS.map((alg) => eoFacelets(pattern.applyAlg(alg)));
+}
+
 export const FACELET_COLOURS = COLOUR;
 export const ORIENTATION_SIGN = ORI_SIGN;
+
 

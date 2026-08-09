@@ -70,19 +70,39 @@ function isLxsSolved(pd: any) {
   return ROTATION_ALGS.some((r) => lxsSolvedInFrame(p.applyAlg(r).patternData))
 }
 
+function eoSolvedInFrame(pd: any) {
+  const c = pd.CORNERS
+  const e = pd.EDGES
+  for (let i = 5; i <= 7; i++) {
+    if (c.pieces[i] !== i || c.orientation[i] !== 0) return false
+  }
+  for (const i of [4, 6, 9, 10, 11]) {
+    if (e.pieces[i] !== i || e.orientation[i] !== 0) return false
+  }
+  return e.orientation.every((v: number) => v === 0)
+}
+
+function isEoSolved(pd: any) {
+  const p = new (SOLVED.constructor as any)(kpuzzle, pd)
+  return ROTATION_ALGS.some((r) => eoSolvedInFrame(p.applyAlg(r).patternData))
+}
+
+function checkSolvedForAlgSet(pd: any, algSet: string): boolean {
+  if (algSet === 'COLL') return isCollSolved(pd)
+  if (algSet === 'LXS') return isLxsSolved(pd)
+  if (algSet === 'EO') return isEoSolved(pd)
+  return isSolved(JSON.stringify(pd))
+}
 
 const applyAllPattern = (scramble: string, reveal: string) =>
   SOLVED.applyAlg(new Alg(scramble)).applyAlg(new Alg(reveal)).patternData
 
-// A spread across all seven ZBLL subsets rather than the first N, which would
-// all be AS — plus EVERY COLL case. COLL's algorithms are borrowed from twelve
-// different ZBLL cases and each needed its AUF offset re-solved against the
-// representative; a stride sample skipped the five that were wrong, so the
-// whole set is checked. Forty cases is cheap.
+// A spread across all seven ZBLL subsets — plus EVERY COLL case and EVERY EO case.
 const sample = [
   ...CASES.filter((c, i) => c.algSet === 'ZBLL' && i % 7 === 0),
   ...CASES.filter((c) => c.algSet === 'COLL'),
   ...CASES.filter((c, i) => c.algSet === 'LXS' && i % 5 === 0),
+  ...CASES.filter((c) => c.algSet === 'EO'),
 ]
 
 // scrambles.json is generated grouped by AUF — the first five entries of every
@@ -115,22 +135,10 @@ describe('revealAlgorithm', () => {
         for (const a of c.algs) {
           const reveal = revealAlgorithm(a, s.auf)
           const resultPattern = applyAllPattern(s.scramble, reveal)
-          if (c.algSet === 'COLL') {
-            expect(
-              isCollSolved(resultPattern),
-              `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
-            ).toBe(true)
-          } else if (c.algSet === 'LXS') {
-            expect(
-              isLxsSolved(resultPattern),
-              `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
-            ).toBe(true)
-          } else {
-            expect(
-              isSolved(JSON.stringify(resultPattern)),
-              `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
-            ).toBe(true)
-          }
+          expect(
+            checkSolvedForAlgSet(resultPattern, c.algSet),
+            `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
+          ).toBe(true)
           checked++
         }
       }
@@ -149,7 +157,7 @@ describe('revealAlgorithm', () => {
           if (s.auf === 0) continue
           const withoutPre = revealAlgorithm(a, 0 as Auf)
           const resultPattern = applyAllPattern(s.scramble, withoutPre)
-          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : c.algSet === 'LXS' ? isLxsSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
+          const solved = checkSolvedForAlgSet(resultPattern, c.algSet)
           if (!solved) anyFailed = true
         }
       }
@@ -165,7 +173,7 @@ describe('revealAlgorithm', () => {
           if (a.aufOffset === 0) continue
           const withoutPost = revealAlgorithm({ ...a, aufOffset: 0 }, s.auf)
           const resultPattern = applyAllPattern(s.scramble, withoutPost)
-          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : c.algSet === 'LXS' ? isLxsSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
+          const solved = checkSolvedForAlgSet(resultPattern, c.algSet)
           if (!solved) anyFailed = true
         }
       }
