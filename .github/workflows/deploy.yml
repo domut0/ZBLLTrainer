@@ -22,12 +22,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
+          # setup-node v5 added automatic caching driven by a `packageManager`
+          # field in package.json. This repo has no such field, so the explicit
+          # cache setting is still what does the work — keep it rather than rely
+          # on detection.
           cache: 'npm'
 
       - name: Install dependencies
@@ -38,11 +42,15 @@ jobs:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
 
+      # upload-pages-artifact v4 stopped including dotfiles. `dist/` contains
+      # none — checked, including recursively — so nothing is lost here. A future
+      # need for one (a .nojekyll, say) means building the artifact by hand
+      # instead, per the action's README.
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: './dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
