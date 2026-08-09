@@ -1,0 +1,138 @@
+{
+  "rejects": [],
+  "warnings": [
+    {
+      "set": "AS",
+      "group": "As3: Jean-Niklas",
+      "index": 1,
+      "alg": "[U2] z D' R U R' D R U'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "AS",
+      "group": "As3: Jean-Niklas",
+      "index": 2,
+      "alg": "F U' R' U' R U F U2 R' U R U' R' U2 R",
+      "reason": "F2L corner 4 disturbed"
+    },
+    {
+      "set": "AS",
+      "group": "As6: Jean-Pétard",
+      "index": 2,
+      "alg": "[U2] x D R' U2 R' D2 R U2 R' D2 R2 D'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "S",
+      "group": "S3: Niklas",
+      "index": 6,
+      "alg": "x' D R2 U' R' U R U' R' U R U' R2 D' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "S",
+      "group": "S6: Pétard",
+      "index": 2,
+      "alg": "[U] x D R2' D2 R U2 R' D2 R U2 R D'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "Pi",
+      "group": "Pi2: Diag",
+      "index": 1,
+      "alg": "x' R' F2 R2 U' R' U R U' R' U R U' R' U R' F2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "Pi",
+      "group": "Pi5: BL-FR diagonal",
+      "index": 11,
+      "alg": "R' U2 R U R' U' R U2 z U R' D' R D U'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "H",
+      "group": "H2: Diag",
+      "index": 2,
+      "alg": "x' U L' U L U2 R U' R' U R' F2 R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "H",
+      "group": "H2: Diag",
+      "index": 5,
+      "alg": "z U R2 D' R U' R U R2' D R D' R U' R2' D",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "H",
+      "group": "H3: Corner line",
+      "index": 12,
+      "alg": "R2 U' R2' U F R2 U R2' U' F' R2 U R2'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "L",
+      "group": "L2: Diag",
+      "index": 5,
+      "alg": "M' U R' F2 r F' r' F2 R2 U' r'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "L",
+      "group": "L3: Opposite/Same",
+      "index": 1,
+      "alg": "[U'] l U' R' D R U R' D'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "L",
+      "group": "L6: Same/Adjacent",
+      "index": 1,
+      "alg": "[U2] l U R' D R U2 R' D' R U R'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "U",
+      "group": "U1: 2GLL",
+      "index": 2,
+      "alg": "(l R) D2 R' U' R D2 R2' D R U R' D'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "U",
+      "group": "U2: Diag",
+      "index": 2,
+      "alg": "L' U' (L R) U2 L' U L U L' U M'",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "U",
+      "group": "U3: Same/Same",
+      "index": 6,
+      "alg": "[U'] r' F R' F' R F' r U r' U2 L' U2 (r R)",
+      "reason": "F2L corner 4 disturbed"
+    },
+    {
+      "set": "U",
+      "group": "U3: Same/Same",
+      "index": 6,
+      "alg": "[U2] z U' D' R2' D R2 U R' D' R U' R U R' D",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "U",
+      "group": "U6: Adjacent/Opposite",
+      "index": 10,
+      "alg": "R U R2' D' R U R' D R2 U' R' U R' U' R2 U' R' U R' U R",
+      "reason": "resolves to a different case than the primary"
+    },
+    {
+      "set": "T",
+      "group": "T5: Adjacent/Same",
+      "index": 1,
+      "alg": "[U'] x' D R U' R' D' R U R'",
+      "reason": "resolves to a different case than the primary"
+    }
+  ]
+}
