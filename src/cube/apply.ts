@@ -224,6 +224,21 @@ function lxsKey(s: CubeState): string {
   ])
 }
 
+const ZBLS_CORNER = 4
+const ZBLS_EDGE = 8
+
+function zblsKey(s: CubeState): string {
+  const cIdx = s.corners.pieces.indexOf(ZBLS_CORNER)
+  const eIdx = s.edges.pieces.indexOf(ZBLS_EDGE)
+  return JSON.stringify([
+    cIdx,
+    s.corners.orientation[cIdx],
+    eIdx,
+    s.edges.orientation[eIdx],
+    [s.edges.orientation[0], s.edges.orientation[1], s.edges.orientation[2], s.edges.orientation[3]],
+  ])
+}
+
 function matcherFor(algSet: AlgSetId): (state: CubeState, target: CubeState) => boolean {
   if (algSet === 'COLL') {
     return (state, target) => {
@@ -245,6 +260,18 @@ function matcherFor(algSet: AlgSetId): (state: CubeState, target: CubeState) => 
         if (state.edges.pieces[i] !== i || state.edges.orientation[i] !== 0) return false
       }
       return lxsKey(state) === lxsKey(target)
+    }
+  }
+
+  if (algSet === 'ZBLS') {
+    return (state, target) => {
+      for (let i = 5; i <= 7; i += 1) {
+        if (state.corners.pieces[i] !== i || state.corners.orientation[i] !== 0) return false
+      }
+      for (const i of [4, 5, 6, 7, 9, 10, 11]) {
+        if (state.edges.pieces[i] !== i || state.edges.orientation[i] !== 0) return false
+      }
+      return zblsKey(state) === zblsKey(target)
     }
   }
 

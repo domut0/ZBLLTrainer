@@ -20,8 +20,8 @@ import idsBefore from './__fixtures__/case-ids-before-issue-10.json'
 import { allProgress, getProgress, resetDbForTests, setLearned } from '@/storage/db'
 
 describe('the algorithm set registry', () => {
-  it('ships ZBLL, COLL, and LXS', () => {
-    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL', 'COLL', 'LXS'])
+  it('ships ZBLL, COLL, LXS, and ZBLS', () => {
+    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL', 'COLL', 'LXS', 'ZBLS'])
     expect(DEFAULT_ALG_SET).toBe('ZBLL')
   })
 
@@ -36,6 +36,7 @@ describe('the algorithm set registry', () => {
     expect(asAlgSetId('ZBLL')).toBe('ZBLL')
     expect(asAlgSetId('COLL')).toBe('COLL')
     expect(asAlgSetId('LXS')).toBe('LXS')
+    expect(asAlgSetId('ZBLS')).toBe('ZBLS')
     expect(asAlgSetId('UNKNOWN')).toBe('ZBLL')
     expect(asAlgSetId(null)).toBe('ZBLL')
     expect(asAlgSetId(42)).toBe('ZBLL')
@@ -43,25 +44,25 @@ describe('the algorithm set registry', () => {
 })
 
 describe('the cases themselves', () => {
-  it('all belong to ZBLL, COLL, or LXS, and every ZBLL case carries a known subset', () => {
+  it('all belong to ZBLL, COLL, LXS, or ZBLS, and every ZBLL case carries a known subset', () => {
     const subsets = ALG_SET_BY_ID.get('ZBLL')!.subsets
     for (const c of CASES) {
       if (c.algSet === 'ZBLL') {
         expect(subsets).toContain(c.subset)
-      } else if (c.algSet === 'COLL') {
+      } else if (c.algSet === 'COLL' || c.algSet === 'LXS' || c.algSet === 'ZBLS') {
         expect(c.subset).toBe('')
       } else {
-        expect(c.algSet).toBe('LXS')
-        expect(c.subset).toBe('')
+        expect(['ZBLL', 'COLL', 'LXS', 'ZBLS']).toContain(c.algSet)
       }
     }
   })
 
-  it('numbers 472 ZBLL, 40 COLL, and 116 LXS cases', () => {
-    expect(CASES.length).toBe(628)
+  it('numbers 472 ZBLL, 40 COLL, 116 LXS, and 302 ZBLS cases', () => {
+    expect(CASES.length).toBe(930)
     expect(casesInAlgSet('ZBLL').length).toBe(472)
     expect(casesInAlgSet('COLL').length).toBe(40)
     expect(casesInAlgSet('LXS').length).toBe(116)
+    expect(casesInAlgSet('ZBLS').length).toBe(302)
   })
 
   it('keeps the measured per-subset counts', () => {

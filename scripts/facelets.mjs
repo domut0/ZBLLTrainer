@@ -288,6 +288,28 @@ export function stageFaceletsAllAufs(pattern) {
   return AUF_ALGS.map((alg) => stageFacelets(pattern.applyAlg(alg)));
 }
 
+export function zblsFacelets(pattern) {
+  const ll = llFacelets(pattern);
+  const slot = readPositionsWithSign(pattern, STAGE_SLOT_POSITIONS, ORI_SIGN);
+  const full = ll + slot;
+
+  const chars = [...full];
+  for (let i = 0; i < ALL_STAGE_POSITIONS.length; i++) {
+    if (i === U_CENTRE_INDEX) continue;
+    const pos = ALL_STAGE_POSITIONS[i];
+    const piece = pattern.patternData[pos.orbit].pieces[pos.slot];
+    if (pos.orbit === "CORNERS" && piece < 4) {
+      chars[i] = "?";
+    }
+  }
+  return chars.join("");
+}
+
+export function zblsFaceletsAllAufs(pattern) {
+  return AUF_ALGS.map((alg) => zblsFacelets(pattern.applyAlg(alg)));
+}
+
 export const FACELET_COLOURS = COLOUR;
 export const ORIENTATION_SIGN = ORI_SIGN;
+
 

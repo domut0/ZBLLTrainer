@@ -28,6 +28,11 @@ const ser = (p) =>
 
 function legality(p, algSet) {
   const c = p.patternData.CORNERS, e = p.patternData.EDGES;
+  if (algSet === "ZBLS") {
+    for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i}`;
+    for (const i of [4, 5, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i}`;
+    return null;
+  }
   if (algSet === "LXS") {
     for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i}`;
     for (const i of [4, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i}`;
@@ -51,6 +56,19 @@ function lxsKey(p) {
       const i = e.pieces.indexOf(pc);
       return [i, e.orientation[i]];
     }),
+  ]);
+}
+
+const ZBLS_CORNER = 4;
+const ZBLS_EDGE = 8;
+function zblsKey(p) {
+  const c = p.patternData.CORNERS, e = p.patternData.EDGES;
+  const cIdx = c.pieces.indexOf(ZBLS_CORNER);
+  const eIdx = e.pieces.indexOf(ZBLS_EDGE);
+  return JSON.stringify([
+    cIdx, c.orientation[cIdx],
+    eIdx, e.orientation[eIdx],
+    [e.orientation[0], e.orientation[1], e.orientation[2], e.orientation[3]],
   ]);
 }
 
@@ -107,6 +125,10 @@ for (const c of sample) {
         temp = temp.applyAlg(AUF[1]);
       }
       expectedId = "LXS:" + best;
+    } else if (c.algSet === "ZBLS") {
+      const unAuf = (4 - entry.auf) % 4;
+      const p0 = unAuf ? p.applyAlg(AUF[unAuf]) : p;
+      expectedId = "ZBLS:" + zblsKey(p0);
     } else {
       expectedId = idOf(alg);
     }

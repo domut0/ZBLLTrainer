@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
 import { KPattern } from "cubing/kpuzzle";
 import { cube3x3x3 } from "cubing/puzzles";
-import { llFacelets, stageFacelets, FACELET_COLOURS } from "./facelets.mjs";
+import { llFacelets, stageFacelets, zblsFacelets, FACELET_COLOURS } from "./facelets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kpuzzle = await cube3x3x3.kpuzzle();
@@ -25,6 +25,20 @@ const scrambles = JSON.parse(readFileSync(join(ROOT, "data", "scrambles.json"), 
 const AUF_ALGS = [new Alg(""), new Alg("U"), new Alg("U2"), new Alg("U'")];
 const U_EDGE_INDICES = [1, 3, 5, 7];
 const U_CENTRE = 4;
+
+const ZBLS_CORNER = 4;
+const ZBLS_EDGE = 8;
+function zblsKey(p) {
+  const c = p.patternData.CORNERS;
+  const e = p.patternData.EDGES;
+  const cIdx = c.pieces.indexOf(ZBLS_CORNER);
+  const eIdx = e.pieces.indexOf(ZBLS_EDGE);
+  return JSON.stringify([
+    cIdx, c.orientation[cIdx],
+    eIdx, e.orientation[eIdx],
+    [e.orientation[0], e.orientation[1], e.orientation[2], e.orientation[3]],
+  ]);
+}
 
 function rebuildState(cubeState) {
   return new KPattern(kpuzzle, {
@@ -90,7 +104,7 @@ for (const c of cases) {
     const f = c.facelets[auf];
     checked++;
 
-    const expectedLen = c.algSet === "LXS" ? 28 : 21;
+    const expectedLen = (c.algSet === "LXS" || c.algSet === "ZBLS") ? 28 : 21;
     if (typeof f !== "string" || f.length !== expectedLen) { report(c.displayName, `auf ${auf}: length ${f?.length}, expected ${expectedLen}`); continue; }
     if ([...f].some((ch) => !ALPHABET.has(ch))) { report(c.displayName, `auf ${auf}: bad character in "${f}"`); continue; }
 
@@ -127,12 +141,20 @@ for (const c of cases) {
       if (count('?') !== 20) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 20`);
       const colouredCount = count(Y) + count(G) + count(B) + count(O) + count(R) + count(FACELET_COLOURS.D);
       if (colouredCount !== 8) report(c.displayName, `auf ${auf}: ${colouredCount} coloured stickers, expected 8`);
+    } else if (c.algSet === "ZBLS") {
+      // Stage set: 28 stickers
+      if (f[U_CENTRE] !== Y) report(c.displayName, `auf ${auf}: centre is ${f[U_CENTRE]}`);
+      if (count('?') !== 12) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 12`);
+      const colouredCount = count(Y) + count(G) + count(B) + count(O) + count(R) + count(FACELET_COLOURS.D);
+      if (colouredCount !== 16) report(c.displayName, `auf ${auf}: ${colouredCount} coloured stickers, expected 16`);
     }
 
     // Recompute from the stored state by an independent route.
     let expected;
     if (c.algSet === "LXS") {
       expected = stageFacelets(state.applyAlg(AUF_ALGS[auf]));
+    } else if (c.algSet === "ZBLS") {
+      expected = zblsFacelets(state.applyAlg(AUF_ALGS[auf]));
     } else {
       expected = llFacelets(state.applyAlg(AUF_ALGS[auf]));
       if (c.algSet === "COLL") {
@@ -212,8 +234,11 @@ for (const c of cases) {
       const derived = SOLVED.applyAlg(ROTATIONS[r].concat(auf).concat(inv));
       if (!centresSolved(derived)) continue;
       let faceletRep;
-      if (c.algSet === "LXS") {
+      if (c.algSet === "ZBLS") {
+        if ("ZBLS:" + zblsKey(derived) === c.id) { matchedAt = r; break; }
+      } else if (c.algSet === "LXS") {
         faceletRep = stageFacelets(derived);
+        if (faceletRep === c.facelets[0]) { matchedAt = r; break; }
       } else {
         faceletRep = llFacelets(derived);
         if (c.algSet === "COLL") {
@@ -221,8 +246,8 @@ for (const c of cases) {
           for (const idx of [1, 3, 5, 7, 10, 13, 16, 19]) chars[idx] = '?';
           faceletRep = chars.join("");
         }
+        if (faceletRep === c.facelets[0]) { matchedAt = r; break; }
       }
-      if (faceletRep === c.facelets[0]) { matchedAt = r; break; }
     }
     if (matchedAt === -1) {
       report(c.displayName, `alg "${a.alg}" (auf ${a.aufOffset}) yields no rotation that reproduces the stored diagram`);
@@ -245,6 +270,8 @@ for (const c of sample) {
     let stateFacelets;
     if (c.algSet === "LXS") {
       stateFacelets = stageFacelets(state);
+    } else if (c.algSet === "ZBLS") {
+      stateFacelets = zblsFacelets(state);
     } else {
       stateFacelets = llFacelets(state);
       if (c.algSet === "COLL") {

@@ -50,6 +50,13 @@ export const ALG_SETS: readonly AlgSetDef[] = [
     subsets: [],
     diagram: 'stage',
   },
+  {
+    id: 'ZBLS',
+    label: 'ZBLS',
+    blurb: 'Zborowski-Bruchem Last Slot: F2L slot plus last layer edge orientation',
+    subsets: [],
+    diagram: 'stage',
+  },
 ]
 
 export const ALG_SET_BY_ID: ReadonlyMap<AlgSetId, AlgSetDef> = new Map(

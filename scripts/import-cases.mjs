@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
 import { KPattern } from "cubing/kpuzzle";
 import { cube3x3x3 } from "cubing/puzzles";
-import { llFaceletsAllAufs, stageFaceletsAllAufs } from "./facelets.mjs";
+import { llFaceletsAllAufs, stageFaceletsAllAufs, zblsFaceletsAllAufs } from "./facelets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kpuzzle = await cube3x3x3.kpuzzle();
@@ -174,6 +174,28 @@ function lxsKey(p) {
       const i = e.pieces.indexOf(pc);
       return [i, e.orientation[i]];
     }),
+  ]);
+}
+
+function zblsLegality(p) {
+  const c = p.patternData.CORNERS;
+  const e = p.patternData.EDGES;
+  for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i} disturbed`;
+  for (const i of [4, 5, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i} disturbed`;
+  return null;
+}
+
+const ZBLS_CORNER = 4;
+const ZBLS_EDGE = 8;
+function zblsKey(p) {
+  const c = p.patternData.CORNERS;
+  const e = p.patternData.EDGES;
+  const cIdx = c.pieces.indexOf(ZBLS_CORNER);
+  const eIdx = e.pieces.indexOf(ZBLS_EDGE);
+  return JSON.stringify([
+    cIdx, c.orientation[cIdx],
+    eIdx, e.orientation[eIdx],
+    [e.orientation[0], e.orientation[1], e.orientation[2], e.orientation[3]],
   ]);
 }
 
@@ -592,10 +614,82 @@ if (lxsCases.length !== 116) {
 
 cases.push(...lxsCases);
 
+// ---------------------------------------------------------------------------
+// Import ZBLS cases (302 cases from data/source/apb/zbls.csv)
+// ---------------------------------------------------------------------------
+const zblsText = readFileSync(join(ROOT, "data", "source", "apb", "zbls.csv"), "utf8");
+const zblsRows = parseCsv(zblsText);
+const ZBLS_COLS = [1, 3, 6, 8];
+const zblsCases = [];
+
+let zblsCaseIndex = 0;
+
+for (let r = 0; r < zblsRows.length; r++) {
+  const row = zblsRows[r];
+  if (!row) continue;
+
+  for (const colIdx of ZBLS_COLS) {
+    const cell = (row[colIdx] ?? "").trim();
+    if (!cell) continue;
+
+    zblsCaseIndex++;
+    const lines = cell.split("\n").map((s) => s.trim()).filter(Boolean);
+
+    const algs = [];
+    let caseKey = null;
+    let caseId = null;
+    let caseState = null;
+
+    for (const line of lines) {
+      const cleaned = normaliseAlg(line, true);
+      if (!cleaned) continue;
+      const res = analyse(cleaned, zblsLegality, zblsKey);
+      if (res.error) {
+        warnings.push({ set: "ZBLS", group: "ZBLS", index: zblsCaseIndex, alg: line, reason: res.error });
+        continue;
+      }
+      if (caseKey === null) {
+        caseKey = res.id;
+        caseId = "ZBLS:" + caseKey;
+        caseState = res.state;
+      } else if (res.id !== caseKey) {
+        warnings.push({ set: "ZBLS", group: "ZBLS", index: zblsCaseIndex, alg: line, reason: "resolves to a different case than the primary" });
+        continue;
+      }
+      algs.push({ alg: cleaned, aufOffset: res.aufOffset });
+    }
+
+    if (!algs.length) {
+      rejects.push({ set: "ZBLS", group: "ZBLS", index: zblsCaseIndex, row: r + 1, reason: "no usable algorithm" });
+      continue;
+    }
+
+    zblsCases.push({
+      id: caseId,
+      algSet: "ZBLS",
+      subset: "",
+      group: "ZBLS",
+      indexInGroup: zblsCaseIndex,
+      displayName: `ZBLS #${zblsCaseIndex}`,
+      state: toCubeState(caseState),
+      facelets: zblsFaceletsAllAufs(caseState),
+      algs,
+    });
+  }
+}
+
+if (zblsCases.length !== 302) {
+  console.error(`\n[ERROR] ZBLS import count mismatch! Got ${zblsCases.length}, expected 302`);
+  process.exit(1);
+}
+
+cases.push(...zblsCases);
+
 console.log(`\ntotal ZBLL imported: ${zbllCount} (expect 472)`);
 console.log(`total COLL derived: ${collCases.length} (expect 40)`);
 console.log(`total LXS imported: ${lxsCases.length} (expect 116)`);
-console.log(`total cases: ${cases.length} (expect 628)`);
+console.log(`total ZBLS imported: ${zblsCases.length} (expect 302)`);
+console.log(`total cases: ${cases.length} (expect 930)`);
 console.log(`unique case ids: ${new Set(cases.map((c) => c.id)).size}`);
 console.log(`fixes applied: ${fixesUsed.length}`);
 console.log(`rejects: ${rejects.length}`);

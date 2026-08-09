@@ -3,6 +3,15 @@
 Frozen ahead of the importer so dependent work can start. Issue 02 must produce
 exactly this; Issues 03, 06 and 07 may rely on it.
 
+**Amended 2026-08-09 (Issue 14)** — added the `ZBLS` set from APB (Zborowski-Bruchem Last Slot): 302 cases parsed from `zbls.csv` (a 94-row grid with algorithm columns 1, 3, 6, 8, yielding 302 non-blank cells and 339 algorithm lines).
+
+**A ZBLS case identity is slot corner (4) + slot edge (8) + last-layer edge orientation vector.**
+Last-layer corner permutation & orientation, and last-layer edge permutation, are all free.
+- Validity predicate `zblsLegality`: corners 5, 6, 7 must be home (piece & orientation 0); edges 4, 5, 6, 7, 9, 10, 11 must be home; corner slot 4 and edge slot 8 are free; last-layer edges may be misoriented. EITHER slot piece may already be in place (55 of the 339 algorithms are cases where only the corner is out and slot edge is solved).
+- Case id: `"ZBLS:" + zblsKey` where `zblsKey` is canonicalised over 24 whole-cube rotations × 4 AUFs as prefixes. The open slot is (4, 8) in all 302 cases.
+- Facelets: 28-character stage facelets, with LL corner stickers (pieces < 4) marked `'?'` grey. LL edges (pieces 0..3) retain their sticker colours. Visual diagram (`ZblsDiagram`) adds explicit orientation markers on misoriented LL edge positions.
+- All 302 cases and 339 algorithm lines retained with 0 rejects. Checked exhaustively (1356 case/algorithm/AUF combinations) by `scripts/verify-zbls-reveal.mjs`.
+
 **Amended 2026-08-09 (Issue 12)** — added the `LXS` set from APB: 116 cases
 across six source sheets, globally numbered 1–116, which is a free correctness
 check on the parse. Introduced **stage facelets** for F2L-stage sets: a
@@ -132,7 +141,7 @@ interface TrainerCase {
   algs: CaseAlg[];
 }
 
-type CasesFile = TrainerCase[]; // 628 entries: 472 ZBLL + 40 derived COLL + 116 LXS
+type CasesFile = TrainerCase[]; // 930 entries: 472 ZBLL + 40 derived COLL + 116 LXS + 302 ZBLS
 ```
 
 ### `FaceletString`
