@@ -27,6 +27,7 @@ vi.mock('@/storage/db', async (importOriginal) => {
   return {
     ...actual,
     allProgress: () => mockAllProgress(),
+    allAttempts: vi.fn(async () => []),
     addAttempt: (a: Omit<AttemptRecord, 'id'>) => mockAddAttempt(a),
     discardLastAttempt: () => mockDiscardLastAttempt(),
   }

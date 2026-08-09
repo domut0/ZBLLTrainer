@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { BrowseView } from '@/components/BrowseView'
 import { DrillView } from '@/components/DrillView'
+import { StatsView } from '@/components/StatsView'
+import { SettingsView } from '@/components/SettingsView'
 
-type Tab = 'browse' | 'drill'
+type Tab = 'browse' | 'drill' | 'stats' | 'settings'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('browse')
@@ -10,11 +12,14 @@ export default function App() {
   return (
     <div className="w-full max-w-md mx-auto h-full flex flex-col bg-zinc-950 shadow-2xl relative overflow-hidden">
       <div className="flex-1 min-h-0 overflow-hidden">
-        {tab === 'browse' ? <BrowseView /> : <DrillView onGoToBrowse={() => setTab('browse')} />}
+        {tab === 'browse' && <BrowseView />}
+        {tab === 'drill' && <DrillView onGoToBrowse={() => setTab('browse')} />}
+        {tab === 'stats' && <StatsView />}
+        {tab === 'settings' && <SettingsView />}
       </div>
 
       <nav className="flex-none border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-md px-3 py-2 flex gap-2">
-        {(['browse', 'drill'] as Tab[]).map((t) => {
+        {(['browse', 'drill', 'stats', 'settings'] as Tab[]).map((t) => {
           const active = tab === t
           return (
             <button
