@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
-import type { Auf } from '@/data/types'
+import type { Auf, CaseAlg } from '@/data/types'
 
 /**
  * Local persistence. There is no backend and never will be (PRD §9), so this is
@@ -17,8 +17,15 @@ export interface ProgressRecord {
   learned: boolean
   /** Index into the case's `algs`. Ignored when `customAlg` is set. */
   primaryAlgIndex: number
-  /** An algorithm the sheet does not have, pasted by the user. */
-  customAlg?: string
+  /**
+   * An algorithm the sheet does not have, pasted by the user.
+   *
+   * Stored with its AUF offset, not as a bare string. The drill reveal needs
+   * the offset to correct for the orientation served (see src/drill/reveal.ts);
+   * a custom algorithm without one would be shown uncorrected and would not
+   * solve the cube in the user's hands. `validateAlgForCase` computes it.
+   */
+  customAlg?: CaseAlg
 }
 
 export interface AttemptRecord {
@@ -108,14 +115,32 @@ export const toggleLearned = (caseId: string) =>
 export const setPrimaryAlgIndex = (caseId: string, primaryAlgIndex: number) =>
   updateProgress(caseId, (p) => ({ ...p, primaryAlgIndex }))
 
-/** Passing undefined clears the custom algorithm and falls back to the sheet's. */
-export const setCustomAlg = (caseId: string, customAlg: string | undefined) =>
+/**
+ * Passing undefined clears the custom algorithm and falls back to the sheet's.
+ * Validate with `validateAlgForCase` first — this stores what it is given.
+ */
+export const setCustomAlg = (caseId: string, customAlg: CaseAlg | undefined) =>
   updateProgress(caseId, (p) => {
     const next = { ...p }
-    if (customAlg && customAlg.trim()) next.customAlg = customAlg.trim()
-    else delete next.customAlg
+    if (customAlg && customAlg.alg.trim()) {
+      next.customAlg = { alg: customAlg.alg.trim(), aufOffset: customAlg.aufOffset }
+    } else delete next.customAlg
     return next
   })
+
+/**
+ * The algorithm the user has actually chosen for a case: their custom one if
+ * they pasted one, otherwise the alternative they picked, otherwise the sheet's
+ * first. Always returns something with an `aufOffset`, so the reveal can be
+ * corrected without the caller thinking about it.
+ */
+export function chosenAlg(
+  algs: readonly CaseAlg[],
+  progress: ProgressRecord | undefined,
+): CaseAlg {
+  if (progress?.customAlg) return progress.customAlg
+  return algs[progress?.primaryAlgIndex ?? 0] ?? algs[0]
+}
 
 // ---------------------------------------------------------------------------
 // Attempts
