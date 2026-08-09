@@ -1,35 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CASES, CASES_BY_ID, SCRAMBLES } from '@/data'
-import type { Scramble, ZbllCase } from '@/data/types'
+import type { CaseSet, Scramble, ZbllCase } from '@/data/types'
 import { LLDiagram } from '@/components/LLDiagram'
 import { revealAlgorithm } from '@/drill/reveal'
 import {
   addAttempt,
   allProgress,
+  allAttempts,
   chosenAlg,
   discardLastAttempt,
   type ProgressRecord,
+  type AttemptRecord,
 } from '@/storage/db'
+import { statsByCase, slowestCases } from '@/stats'
 
-/*
- * The drill loop (Issue 07). A scramble appears, you apply it, hold to ready,
- * release to start, execute, tap to stop, and the case is revealed.
- *
- * The whole feature turns on one thing: the case is served at a RANDOM AUF, so
- * neither the algorithm nor the diagram may be shown as stored.
- *
- *   - the algorithm goes through `revealAlgorithm(chosenAlg(...), servedAuf)`.
- *     Printing `alg.alg` shows a sequence that does not solve the cube in the
- *     user's hands. See the header of src/drill/reveal.ts.
- *   - the diagram is `c.facelets[servedAuf]`, never `c.facelets[0]`, which
- *     would draw a different orientation to the one on the table.
- *
- * The served AUF is not generated here: every scramble in scrambles.json
- * carries the AUF it presents the case at, and that entry's `auf` IS the
- * served AUF.
- */
-
-/** Conventional short hold before the timer arms. */
 const HOLD_MS = 300
 
 type Phase =
@@ -44,17 +28,56 @@ interface Served {
   scramble: Scramble
 }
 
-/** Uniform choice. `Math.random()` is < 1, but clamp anyway so a stubbed one is safe. */
+export interface DrillFilter {
+  type: 'all' | 'set' | 'group' | 'slowest'
+  set: CaseSet
+  group: string
+}
+
+const DEFAULT_FILTER: DrillFilter = {
+  type: 'all',
+  set: 'T',
+  group: CASES[0].group,
+}
+
+const ALL_GROUPS: string[] = []
+for (const c of CASES) {
+  if (!ALL_GROUPS.includes(c.group)) {
+    ALL_GROUPS.push(c.group)
+  }
+}
+
 function pick<T>(items: readonly T[]): T | undefined {
   if (items.length === 0) return undefined
   return items[Math.min(items.length - 1, Math.floor(Math.random() * items.length))]
 }
 
-/** The active pool: ticked cases that actually have scrambles to serve. */
-function drillPool(progress: Map<string, ProgressRecord>): ZbllCase[] {
-  return CASES.filter(
+function getFilteredPool(
+  progress: Map<string, ProgressRecord>,
+  attempts: AttemptRecord[],
+  filter: DrillFilter,
+): ZbllCase[] {
+  const ticked = CASES.filter(
     (c) => progress.get(c.id)?.learned === true && (SCRAMBLES[c.id]?.length ?? 0) > 0,
   )
+
+  if (filter.type === 'all') {
+    return ticked
+  }
+  if (filter.type === 'set') {
+    return ticked.filter((c) => c.set === filter.set)
+  }
+  if (filter.type === 'group') {
+    return ticked.filter((c) => c.group === filter.group)
+  }
+  if (filter.type === 'slowest') {
+    const stats = statsByCase(attempts)
+    const tickedIds = ticked.map((c) => c.id)
+    const slowestIds = slowestCases(tickedIds, stats)
+    const slowestSet = new Set(slowestIds)
+    return ticked.filter((c) => slowestSet.has(c.id))
+  }
+  return ticked
 }
 
 function serveFrom(pool: readonly ZbllCase[]): Served | null {
@@ -72,21 +95,23 @@ function formatMs(ms: number): string {
   return `${minutes}:${(totalSeconds - minutes * 60).toFixed(2).padStart(5, '0')}`
 }
 
-/** The same, with a unit, for prose rather than the clock. */
 const spokenMs = (ms: number): string => (ms < 60_000 ? `${formatMs(ms)}s` : formatMs(ms))
 
 export interface DrillViewProps {
-  /** Send the user to browse, so an empty pool has somewhere to go. */
   onGoToBrowse?: () => void
 }
 
 export function DrillView({ onGoToBrowse }: DrillViewProps) {
   const [progress, setProgress] = useState<Map<string, ProgressRecord>>(new Map())
+  const [attempts, setAttempts] = useState<AttemptRecord[]>([])
   const [pool, setPool] = useState<ZbllCase[] | null>(null)
   const [served, setServed] = useState<Served | null>(null)
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
   const [elapsed, setElapsed] = useState(0)
   const [note, setNote] = useState<string | null>(null)
+
+  const [filter, setFilter] = useState<DrillFilter>(DEFAULT_FILTER)
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
 
   const holdTimer = useRef<number | null>(null)
 
@@ -97,19 +122,38 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
     }
   }, [])
 
-  // Load progress once, build the pool, serve the first scramble.
   useEffect(() => {
     let cancelled = false
-    allProgress()
-      .then((p) => {
+    Promise.all([allProgress(), allAttempts()])
+      .then(([p, a]) => {
         if (cancelled) return
         setProgress(p)
-        const next = drillPool(p)
-        setPool(next)
-        setServed(serveFrom(next))
+        setAttempts(a)
+
+        const saved = localStorage.getItem('lock-in-filter')
+        let initialFilter = DEFAULT_FILTER
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved)
+            if (parsed && typeof parsed.type === 'string') {
+              initialFilter = {
+                type: parsed.type,
+                set: parsed.set || 'T',
+                group: parsed.group || CASES[0].group,
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }
+        setFilter(initialFilter)
+
+        const nextPool = getFilteredPool(p, a, initialFilter)
+        setPool(nextPool)
+        setServed(serveFrom(nextPool))
       })
       .catch((err: unknown) => {
-        console.error('Failed to load progress for the drill pool:', err)
+        console.error('Failed to load progress or attempts:', err)
         if (!cancelled) setPool([])
       })
     return () => {
@@ -117,10 +161,46 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
     }
   }, [])
 
+  useEffect(() => {
+    if (pool !== null) {
+      const nextPool = getFilteredPool(progress, attempts, filter)
+      setPool(nextPool)
+    }
+  }, [progress, attempts, filter])
+
+  useEffect(() => {
+    let wakeLock: any = null
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen')
+        }
+      } catch (err) {
+        console.warn('Wake Lock request failed:', err)
+      }
+    }
+
+    requestWakeLock()
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      if (wakeLock) {
+        wakeLock.release().catch((err: any) => {
+          console.warn('Wake Lock release failed:', err)
+        })
+      }
+    }
+  }, [])
+
   useEffect(() => clearHold, [clearHold])
 
-  // The running clock. `phase` is replaced only when the phase itself changes,
-  // so re-renders from setElapsed do not restart the interval.
   useEffect(() => {
     if (phase.kind !== 'running') return
     const started = phase.startedAt
@@ -134,12 +214,21 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
     const ms = at - phase.startedAt
     setElapsed(ms)
     setPhase({ kind: 'stopped', ms })
-    addAttempt({ caseId: served.c.id, ms, at, auf: served.scramble.auf }).catch(
-      (err: unknown) => {
+    addAttempt({ caseId: served.c.id, ms, at, auf: served.scramble.auf })
+      .then((insertedId) => {
+        const newAttempt: AttemptRecord = {
+          id: insertedId,
+          caseId: served.c.id,
+          ms,
+          at,
+          auf: served.scramble.auf,
+        }
+        setAttempts((prev) => [...prev, newAttempt])
+      })
+      .catch((err: unknown) => {
         console.error('Failed to record attempt:', err)
         setNote('Could not save that attempt.')
-      },
-    )
+      })
   }, [phase, served])
 
   const nextScramble = useCallback(() => {
@@ -156,6 +245,9 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
       if (!removed) {
         setNote('Nothing to discard.')
         return
+      }
+      if (removed.id !== undefined) {
+        setAttempts((prev) => prev.filter((a) => a.id !== removed.id))
       }
       const name = CASES_BY_ID.get(removed.caseId)?.displayName ?? removed.caseId
       setNote(`Discarded ${spokenMs(removed.ms)} on ${name}.`)
@@ -186,7 +278,6 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
       return
     }
     if (phase.kind === 'holding') {
-      // Released before the hold completed: never armed, so nothing starts.
       clearHold()
       setPhase({ kind: 'idle' })
     }
@@ -201,7 +292,6 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      // Keeps the touch from scrolling the page or starting a selection.
       e.preventDefault()
       press()
     },
@@ -235,9 +325,61 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
     [release],
   )
 
+  const handleFilterTypeChange = (type: DrillFilter['type']) => {
+    const nextFilter = { ...filter, type }
+    setFilter(nextFilter)
+    localStorage.setItem('lock-in-filter', JSON.stringify(nextFilter))
+    const nextPool = getFilteredPool(progress, attempts, nextFilter)
+    setPool(nextPool)
+    setServed(serveFrom(nextPool))
+  }
+
+  const handleFilterSetChange = (set: CaseSet) => {
+    const nextFilter = { ...filter, set }
+    setFilter(nextFilter)
+    localStorage.setItem('lock-in-filter', JSON.stringify(nextFilter))
+    const nextPool = getFilteredPool(progress, attempts, nextFilter)
+    setPool(nextPool)
+    setServed(serveFrom(nextPool))
+  }
+
+  const handleFilterGroupChange = (group: string) => {
+    const nextFilter = { ...filter, group }
+    setFilter(nextFilter)
+    localStorage.setItem('lock-in-filter', JSON.stringify(nextFilter))
+    const nextPool = getFilteredPool(progress, attempts, nextFilter)
+    setPool(nextPool)
+    setServed(serveFrom(nextPool))
+  }
+
+  const running = phase.kind === 'running'
+  const stopped = phase.kind === 'stopped'
+
+  const headerActions = (
+    <button
+      onClick={() => setShowFilterPanel(!showFilterPanel)}
+      disabled={running}
+      aria-label="Toggle drill pool filter panel"
+      className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all active:scale-95 border ${
+        showFilterPanel
+          ? 'bg-zinc-100 text-zinc-950 border-zinc-100 shadow-sm'
+          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+      }`}
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        />
+      </svg>
+    </button>
+  )
+
   if (pool === null) {
     return (
-      <Shell>
+      <Shell headerActions={headerActions}>
         <div className="flex-1 flex items-center justify-center text-sm text-zinc-500">
           Loading your pool…
         </div>
@@ -245,10 +387,83 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
     )
   }
 
-  if (pool.length === 0 || !served) {
-    return (
-      <Shell>
-        <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-6">
+  return (
+    <Shell poolSize={pool.length} headerActions={headerActions}>
+      {showFilterPanel && (
+        <div className="flex-none bg-zinc-900 border-b border-zinc-850/80 p-4 flex flex-col gap-4 animate-in slide-in-from-top duration-200 z-30 relative" data-testid="drill-filter-panel">
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 block mb-2">
+              Pool Filter
+            </label>
+            <div className="flex bg-zinc-950 p-1 rounded-xl border border-zinc-800/60 w-full h-11">
+              {(['all', 'set', 'group', 'slowest'] as const).map((type) => {
+                const active = filter.type === type
+                const labels: Record<string, string> = {
+                  all: 'All',
+                  set: 'Set',
+                  group: 'Group',
+                  slowest: 'Slowest 15',
+                }
+                return (
+                  <button
+                    key={type}
+                    onClick={() => handleFilterTypeChange(type)}
+                    data-testid={`filter-type-${type}`}
+                    className={`flex-1 text-xs font-semibold rounded-lg capitalize transition-all ${
+                      active ? 'bg-zinc-100 text-zinc-950 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    {labels[type]}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {filter.type === 'set' && (
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 block mb-2">
+                Choose Set
+              </label>
+              <select
+                value={filter.set}
+                onChange={(e) => handleFilterSetChange(e.target.value as CaseSet)}
+                data-testid="filter-set-select"
+                className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm font-semibold text-zinc-100 focus:outline-none focus:border-zinc-700"
+              >
+                {(['T', 'U', 'L', 'H', 'Pi', 'S', 'AS'] as CaseSet[]).map((s) => (
+                  <option key={s} value={s}>
+                    Set {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {filter.type === 'group' && (
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 block mb-2">
+                Choose Group
+              </label>
+              <select
+                value={filter.group}
+                onChange={(e) => handleFilterGroupChange(e.target.value)}
+                data-testid="filter-group-select"
+                className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm font-semibold text-zinc-100 focus:outline-none focus:border-zinc-700"
+              >
+                {ALL_GROUPS.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
+      {pool.length === 0 || !served ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-6" data-testid="drill-empty-state">
           <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -261,8 +476,11 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
           </div>
           <h2 className="text-lg font-bold text-zinc-100">Nothing to drill yet</h2>
           <p className="text-sm text-zinc-400 max-w-[16rem]">
-            The drill pool is every case you have ticked as learned. Go to Browse and tick a
-            case to start drilling it.
+            {filter.type === 'all'
+              ? 'The drill pool is empty. Go to Browse and tick a case to start drilling it.'
+              : filter.type === 'slowest'
+                ? 'No ticked cases have attempts yet to calculate worst medians.'
+                : `No ticked cases found for the chosen ${filter.type === 'set' ? 'Set' : 'Group'}.`}
           </p>
           {onGoToBrowse && (
             <button
@@ -273,164 +491,160 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
             </button>
           )}
         </div>
-      </Shell>
-    )
-  }
-
-  const { c, scramble } = served
-  const servedAuf = scramble.auf
-  const alg = chosenAlg(c.algs, progress.get(c.id))
-  const revealed = revealAlgorithm(alg, servedAuf)
-  const stopped = phase.kind === 'stopped'
-  const running = phase.kind === 'running'
-
-  const timerColour =
-    phase.kind === 'ready'
-      ? 'text-emerald-400'
-      : phase.kind === 'holding'
-        ? 'text-amber-400'
-        : 'text-zinc-100'
-
-  const hint =
-    phase.kind === 'idle'
-      ? 'Scramble, then hold here'
-      : phase.kind === 'holding'
-        ? 'Keep holding…'
-        : phase.kind === 'ready'
-          ? 'Release to start'
-          : running
-            ? 'Tap anywhere to stop'
-            : 'Attempt recorded'
-
-  return (
-    <Shell poolSize={pool.length}>
-      {!running && !stopped && (
-        <div className="flex-none px-4 pt-3">
-          <div className="rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-4">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
-              Scramble
-            </div>
-            <div
-              className="font-mono text-sm leading-relaxed text-zinc-200 break-words"
-              data-testid="drill-scramble"
-            >
-              {scramble.scramble}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* The timer: a large target that never scrolls the page or selects text. */}
-      <div
-        data-testid="drill-timer"
-        role="button"
-        tabIndex={0}
-        aria-label="Timer. Hold to ready, release to start, tap to stop."
-        onPointerDown={onPointerDown}
-        onPointerUp={onPointerUp}
-        onPointerCancel={cancel}
-        onPointerLeave={cancel}
-        onKeyDown={onKeyDown}
-        onKeyUp={onKeyUp}
-        onContextMenu={(e) => e.preventDefault()}
-        style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
-        className="flex-1 min-h-[44px] flex flex-col items-center justify-center gap-2 px-4 cursor-pointer select-none"
-      >
-        <div
-          className={`font-mono text-6xl font-extrabold tabular-nums tracking-tight transition-colors ${timerColour}`}
-          aria-live="polite"
-          data-testid="drill-time"
-        >
-          {formatMs(stopped ? phase.ms : elapsed)}
-        </div>
-        <div className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
-          {hint}
-        </div>
-      </div>
-
-      {stopped && (
-        <div className="flex-none px-4 pb-2 overflow-y-auto" data-testid="drill-reveal">
-          <div className="rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-4 flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                  Set {c.set} • {c.group}
+      ) : (
+        <>
+          {!running && !stopped && (
+            <div className="flex-none px-4 pt-3">
+              <div className="rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-4">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
+                  Scramble
                 </div>
-                <h2
-                  className="text-xl font-extrabold text-zinc-100 tracking-tight truncate"
-                  data-testid="drill-case-name"
+                <div
+                  className="font-mono text-sm leading-relaxed text-zinc-200 break-words"
+                  data-testid="drill-scramble"
                 >
-                  {c.displayName}
-                </h2>
-              </div>
-              <div className="flex-none w-20 h-20 rounded-xl bg-zinc-950/60 border border-zinc-800/60 p-1.5 flex items-center justify-center">
-                {/* facelets[servedAuf], not facelets[0]: the orientation in the hands. */}
-                <LLDiagram
-                  facelets={c.facelets[servedAuf]}
-                  className="w-full h-full"
-                  label={`${c.displayName} at the served AUF`}
-                />
+                  {served.scramble.scramble}
+                </div>
               </div>
             </div>
+          )}
 
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">
-                Algorithm
-              </div>
-              <div
-                className="font-mono text-base font-bold text-zinc-100 break-words select-text"
-                data-testid="drill-alg"
-              >
-                {revealed}
-              </div>
+          <div
+            data-testid="drill-timer"
+            role="button"
+            tabIndex={0}
+            aria-label="Timer. Hold to ready, release to start, tap to stop."
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+            onPointerCancel={cancel}
+            onPointerLeave={cancel}
+            onKeyDown={onKeyDown}
+            onKeyUp={onKeyUp}
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+            className="flex-1 min-h-[44px] flex flex-col items-center justify-center gap-2 px-4 cursor-pointer select-none"
+          >
+            <div
+              className={`font-mono text-6xl font-extrabold tabular-nums tracking-tight transition-colors ${
+                phase.kind === 'ready'
+                  ? 'text-emerald-400'
+                  : phase.kind === 'holding'
+                    ? 'text-amber-400'
+                    : 'text-zinc-100'
+              }`}
+              aria-live="polite"
+              data-testid="drill-time"
+            >
+              {formatMs(stopped ? phase.ms : elapsed)}
             </div>
-
-            <div className="font-mono text-[11px] text-zinc-500 break-words">
-              {scramble.scramble}
+            <div className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+              {phase.kind === 'idle'
+                ? 'Scramble, then hold here'
+                : phase.kind === 'holding'
+                  ? 'Keep holding…'
+                  : phase.kind === 'ready'
+                    ? 'Release to start'
+                    : running
+                      ? 'Tap anywhere to stop'
+                      : 'Attempt recorded'}
             </div>
           </div>
-        </div>
-      )}
 
-      <div className="flex-none px-4 pt-2 pb-4 flex flex-col gap-2">
-        {note && (
-          <p className="text-xs text-amber-400 text-center" role="status">
-            {note}
-          </p>
-        )}
-        <div className="flex gap-2">
-          <button
-            onClick={nextScramble}
-            disabled={running}
-            className="flex-1 h-12 rounded-xl bg-zinc-100 text-zinc-950 text-sm font-semibold disabled:opacity-30 active:scale-[0.98] transition-all"
-          >
-            {stopped ? 'Next case' : 'Skip'}
-          </button>
-          <button
-            onClick={handleDiscard}
-            disabled={running}
-            className="h-12 px-5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-300 disabled:opacity-30 active:scale-[0.98] transition-all"
-          >
-            Discard
-          </button>
-        </div>
-      </div>
+          {stopped && (
+            <div className="flex-none px-4 pb-2 overflow-y-auto" data-testid="drill-reveal">
+              <div className="rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-4 flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                      Set {served.c.set} • {served.c.group}
+                    </div>
+                    <h2
+                      className="text-xl font-extrabold text-zinc-100 tracking-tight truncate"
+                      data-testid="drill-case-name"
+                    >
+                      {served.c.displayName}
+                    </h2>
+                  </div>
+                  <div className="flex-none w-20 h-20 rounded-xl bg-zinc-950/60 border border-zinc-800/60 p-1.5 flex items-center justify-center">
+                    <LLDiagram
+                      facelets={served.c.facelets[served.scramble.auf]}
+                      className="w-full h-full"
+                      label={`${served.c.displayName} at the served AUF`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">
+                    Algorithm
+                  </div>
+                  <div
+                    className="font-mono text-base font-bold text-zinc-100 break-words select-text"
+                    data-testid="drill-alg"
+                  >
+                    {revealAlgorithm(chosenAlg(served.c.algs, progress.get(served.c.id)), served.scramble.auf)}
+                  </div>
+                </div>
+
+                <div className="font-mono text-[11px] text-zinc-500 break-words">
+                  {served.scramble.scramble}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex-none px-4 pt-2 pb-4 flex flex-col gap-2">
+            {note && (
+              <p className="text-xs text-amber-400 text-center" role="status">
+                {note}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={nextScramble}
+                disabled={running}
+                className="flex-1 h-12 rounded-xl bg-zinc-100 text-zinc-950 text-sm font-semibold disabled:opacity-30 active:scale-[0.98] transition-all"
+              >
+                {stopped ? 'Next case' : 'Skip'}
+              </button>
+              <button
+                onClick={handleDiscard}
+                disabled={running}
+                className="h-12 px-5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-300 disabled:opacity-30 active:scale-[0.98] transition-all"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </Shell>
   )
 }
 
-function Shell({ children, poolSize }: { children: React.ReactNode; poolSize?: number }) {
+function Shell({
+  children,
+  poolSize,
+  headerActions,
+}: {
+  children: React.ReactNode
+  poolSize?: number
+  headerActions?: React.ReactNode
+}) {
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-50 select-none overflow-hidden">
       <header className="flex-none h-14 border-b border-zinc-900 flex items-center justify-between px-4">
         <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
           Drill
         </h1>
-        {poolSize !== undefined && (
-          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-900/50 px-2.5 py-1 rounded-lg border border-zinc-800/40">
-            {poolSize} in pool
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {headerActions}
+          {poolSize !== undefined && (
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-900/50 px-2.5 py-1 rounded-lg border border-zinc-800/40">
+              {poolSize} in pool
+            </div>
+          )}
+        </div>
       </header>
       {children}
     </div>
