@@ -6,9 +6,9 @@ import { FACELET_COUNT, U_CENTRE_INDEX } from './types'
 // Repeating a thin slice here catches the other failure: shipping a stale or
 // half-regenerated data/cases.json into the app.
 describe('case data', () => {
-  it('has all 472 cases with unique ids', () => {
-    expect(CASES).toHaveLength(472)
-    expect(CASES_BY_ID.size).toBe(472)
+  it('has all 512 cases with unique ids', () => {
+    expect(CASES).toHaveLength(512)
+    expect(CASES_BY_ID.size).toBe(512)
   })
 
   it('gives every case four diagrams of 21 stickers', () => {
@@ -22,9 +22,15 @@ describe('case data', () => {
     for (const c of CASES) {
       for (const f of c.facelets) {
         expect(f, `${c.displayName}: ${f}`).not.toContain('W')
-        // Every last-layer edge is oriented in ZBLL, so these are always yellow.
-        for (const i of [1, 3, 5, 7, U_CENTRE_INDEX]) {
-          expect(f[i], `${c.displayName} index ${i}`).toBe('Y')
+        if (c.algSet === 'ZBLL') {
+          for (const i of [1, 3, 5, 7, U_CENTRE_INDEX]) {
+            expect(f[i], `${c.displayName} index ${i}`).toBe('Y')
+          }
+        } else if (c.algSet === 'COLL') {
+          for (const i of [1, 3, 5, 7]) {
+            expect(f[i], `${c.displayName} index ${i}`).toBe('?')
+          }
+          expect(f[U_CENTRE_INDEX], `${c.displayName} index ${U_CENTRE_INDEX}`).toBe('Y')
         }
       }
     }
@@ -46,12 +52,13 @@ describe('case data', () => {
   // Browse keys its per-group ticked counts by the group label alone. That is
   // only safe while no two sets share a label — otherwise their counts silently
   // merge, which looks like a UI bug and is really a data one.
-  it('never reuses a group label across two subsets', () => {
+  it('never reuses a group label across two subsets within the same set', () => {
     const setsByGroup = new Map<string, Set<string>>()
     for (const c of CASES) {
-      const seen = setsByGroup.get(c.group) ?? new Set<string>()
+      const key = `${c.algSet}:${c.group}`
+      const seen = setsByGroup.get(key) ?? new Set<string>()
       seen.add(c.subset)
-      setsByGroup.set(c.group, seen)
+      setsByGroup.set(key, seen)
     }
     const shared = [...setsByGroup].filter(([, sets]) => sets.size > 1)
     expect(shared.map(([g]) => g)).toEqual([])

@@ -15,8 +15,10 @@ describe('AlgSetPicker', () => {
   // With one set registered the picker still has to be on screen — it is how
   // the user learns the app is scoped to a set at all.
   it('shows even when there is only one set', () => {
-    expect(ALG_SETS.length).toBe(1)
-    render(<AlgSetPicker sets={ALG_SETS} value="ZBLL" onChange={() => {}} />)
+    const singleSet: AlgSetDef[] = [
+      { id: 'ZBLL', label: 'ZBLL', blurb: 'a', subsets: [], diagram: 'last-layer' },
+    ]
+    render(<AlgSetPicker sets={singleSet} value="ZBLL" onChange={() => {}} />)
     expect(screen.getByTestId('alg-set-picker')).toBeInTheDocument()
   })
 

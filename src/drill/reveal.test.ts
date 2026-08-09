@@ -25,11 +25,47 @@ const SOLVED_STATES = new Set(
 
 const isSolved = (patternJson: string) => SOLVED_STATES.has(patternJson)
 
-const applyAll = (scramble: string, reveal: string) =>
-  JSON.stringify(SOLVED.applyAlg(new Alg(scramble)).applyAlg(new Alg(reveal)).patternData)
+/**
+ * COLL is solved when the corners are home and edge orientation survived. Edge
+ * PERMUTATION is deliberately not checked — leaving it free is the definition
+ * of the set.
+ *
+ * The rotation has to be undone for the WHOLE state, not just the corners.
+ * Allowing a rotated corner arrangement while demanding the F2L edges sit at
+ * their unrotated indices is a predicate no cube can satisfy once an algorithm
+ * carries a `y`, and 5 of the borrowed algorithms do.
+ */
+function collSolvedInFrame(pd: any) {
+  const c = pd.CORNERS
+  const e = pd.EDGES
+  return (
+    c.pieces.every((v: number, i: number) => v === i) &&
+    c.orientation.every((v: number) => v === 0) &&
+    e.pieces.slice(4).every((v: number, i: number) => v === i + 4) &&
+    e.orientation.every((v: number) => v === 0)
+  )
+}
 
-// A spread across all seven sets rather than the first N, which would all be AS.
-const sample = CASES.filter((_, i) => i % 7 === 0)
+const ROTATION_ALGS = ROTATIONS.map((r) => new Alg(r))
+
+function isCollSolved(pd: any) {
+  const p = new (SOLVED.constructor as any)(kpuzzle, pd)
+  return ROTATION_ALGS.some((r) => collSolvedInFrame(p.applyAlg(r).patternData))
+}
+
+
+const applyAllPattern = (scramble: string, reveal: string) =>
+  SOLVED.applyAlg(new Alg(scramble)).applyAlg(new Alg(reveal)).patternData
+
+// A spread across all seven ZBLL subsets rather than the first N, which would
+// all be AS — plus EVERY COLL case. COLL's algorithms are borrowed from twelve
+// different ZBLL cases and each needed its AUF offset re-solved against the
+// representative; a stride sample skipped the five that were wrong, so the
+// whole set is checked. Forty cases is cheap.
+const sample = [
+  ...CASES.filter((c, i) => c.algSet === 'ZBLL' && i % 7 === 0),
+  ...CASES.filter((c) => c.algSet === 'COLL'),
+]
 
 // scrambles.json is generated grouped by AUF — the first five entries of every
 // case are all auf 0. Taking the first N therefore tests only the orientation
@@ -44,7 +80,8 @@ const acrossAufs = (caseId: string) => {
 
 describe('revealAlgorithm', () => {
   it('covers every subset in the sample', () => {
-    expect(new Set(sample.map((c) => c.subset)).size).toBe(7)
+    const zbllSample = sample.filter((c) => c.algSet === 'ZBLL')
+    expect(new Set(zbllSample.map((c) => c.subset)).size).toBe(7)
   })
 
   it('exercises all four AUFs, not just the uncorrected one', () => {
@@ -59,10 +96,18 @@ describe('revealAlgorithm', () => {
       for (const s of acrossAufs(c.id)) {
         for (const a of c.algs) {
           const reveal = revealAlgorithm(a, s.auf)
-          expect(
-            isSolved(applyAll(s.scramble, reveal)),
-            `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
-          ).toBe(true)
+          const resultPattern = applyAllPattern(s.scramble, reveal)
+          if (c.algSet === 'COLL') {
+            expect(
+              isCollSolved(resultPattern),
+              `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
+            ).toBe(true)
+          } else {
+            expect(
+              isSolved(JSON.stringify(resultPattern)),
+              `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
+            ).toBe(true)
+          }
           checked++
         }
       }
@@ -80,7 +125,9 @@ describe('revealAlgorithm', () => {
         for (const a of c.algs) {
           if (s.auf === 0) continue
           const withoutPre = revealAlgorithm(a, 0 as Auf)
-          if (!isSolved(applyAll(s.scramble, withoutPre))) anyFailed = true
+          const resultPattern = applyAllPattern(s.scramble, withoutPre)
+          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
+          if (!solved) anyFailed = true
         }
       }
     }
@@ -94,7 +141,9 @@ describe('revealAlgorithm', () => {
         for (const a of c.algs) {
           if (a.aufOffset === 0) continue
           const withoutPost = revealAlgorithm({ ...a, aufOffset: 0 }, s.auf)
-          if (!isSolved(applyAll(s.scramble, withoutPost))) anyFailed = true
+          const resultPattern = applyAllPattern(s.scramble, withoutPost)
+          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
+          if (!solved) anyFailed = true
         }
       }
     }

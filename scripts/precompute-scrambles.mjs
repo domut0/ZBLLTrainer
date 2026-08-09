@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
@@ -82,6 +82,9 @@ async function main() {
   const cases = JSON.parse(readFileSync(casesPath, "utf8"));
   console.log(`Loaded ${cases.length} cases from data/cases.json`);
 
+  const scramblesPath = join(ROOT, "data", "scrambles.json");
+  const existingScrambles = existsSync(scramblesPath) ? JSON.parse(readFileSync(scramblesPath, "utf8")) : {};
+
   const scramblesData = {};
   
   let totalScrambles = 0;
@@ -115,9 +118,46 @@ async function main() {
     });
   }
 
+  const serialise = (p) =>
+    JSON.stringify([
+      p.patternData.CORNERS.pieces, p.patternData.CORNERS.orientation,
+      p.patternData.EDGES.pieces, p.patternData.EDGES.orientation,
+    ]);
+
+  /**
+   * Cached scrambles are reusable only if they still land on the case they are
+   * filed under. Solving is the slow part of this script and re-solving 9000
+   * unchanged cases to add one set is waste — but a cache keyed on the case id
+   * alone would survive a change to that case's *state*, leaving scrambles
+   * that quietly present the wrong cube. Re-checking is cheap; re-solving is
+   * not, so check every one.
+   */
+  function cacheIsGood(entries, targetState) {
+    if (!Array.isArray(entries) || entries.length === 0) return false;
+    for (const entry of entries) {
+      if (typeof entry?.scramble !== "string" || !AUFS.some((a) => a.val === entry.auf)) return false;
+      const want = serialise(targetState.applyAlg(AUFS[entry.auf].alg));
+      let got;
+      try {
+        got = serialise(SOLVED.applyAlg(new Alg(entry.scramble)));
+      } catch {
+        return false;
+      }
+      if (got !== want) return false;
+    }
+    return true;
+  }
+
+  let reusedCases = 0;
+
   for (let idx = 0; idx < cases.length; idx++) {
     const c = cases[idx];
     const targetState = rebuildState(c.state);
+    if (cacheIsGood(existingScrambles[c.id], targetState)) {
+      scramblesData[c.id] = existingScrambles[c.id];
+      reusedCases++;
+      continue;
+    }
     const caseScrambles = [];
     const seenScrambles = new Set();
 
@@ -188,7 +228,6 @@ async function main() {
   }
 
   // 4. Write data/scrambles.json
-  const scramblesPath = join(ROOT, "data", "scrambles.json");
   writeFileSync(scramblesPath, JSON.stringify(scramblesData, null, 0));
 
   const tEnd = Date.now();
@@ -196,6 +235,7 @@ async function main() {
 
   console.log("\n--- Precomputation Complete ---");
   console.log(`Total cases processed: ${cases.length}`);
+  console.log(`Cases reused from cache: ${reusedCases} of ${cases.length}`);
   console.log(`Total scrambles generated: ${totalScrambles}`);
   console.log(`Failed verifications: ${failedVerificationCount}`);
   console.log(`Scramble length range: ${minLength} to ${maxLength} moves`);

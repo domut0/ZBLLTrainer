@@ -1,4 +1,4 @@
-import type { Auf, CubeState } from '@/data/types'
+import type { AlgSetId, Auf, CubeState } from '@/data/types'
 import { MOVES, type MoveTable } from './moves.generated'
 
 /**
@@ -202,6 +202,27 @@ export type ValidationResult =
   | { ok: false; reason: string }
 
 /**
+ * When a candidate state counts as being the target case.
+ *
+ * ZBLL fixes the whole last layer, so nothing short of an exact match will do.
+ * COLL fixes the corners and requires edge ORIENTATION to survive, but leaves
+ * edge PERMUTATION free — that is the definition of the set, and checking
+ * permutation here would reject most of a COLL case's own algorithms.
+ */
+function matcherFor(algSet: AlgSetId): (state: CubeState, target: CubeState) => boolean {
+  if (algSet !== 'COLL') return statesEqual
+
+  return (state, target) => {
+    const cornersMatch =
+      state.corners.pieces.every((v, i) => v === target.corners.pieces[i]) &&
+      state.corners.orientation.every((v, i) => v === target.corners.orientation[i])
+    const f2lEdgesHome = state.edges.pieces.slice(4).every((v, i) => v === i + 4)
+    const edgesOriented = state.edges.orientation.every((v) => v === 0)
+    return cornersMatch && f2lEdgesHome && edgesOriented
+  }
+}
+
+/**
  * Checks a pasted algorithm actually solves `target`, and works out the AUF
  * offset the reveal will need.
  *
@@ -211,17 +232,26 @@ export type ValidationResult =
  * move leaves behind. Both corrections go to the LEFT of the inverted
  * algorithm — getting that backwards is what produced 266 false rejects during
  * the import, and it would reject perfectly good algorithms here too.
+ *
+ * What counts as "solves it" is per-set, so `algSet` is required rather than
+ * defaulted: a default would quietly re-create the ZBLL-is-the-only-set
+ * assumption that Issue 10 spent its whole diff removing.
  */
-export function validateAlgForCase(raw: string, target: CubeState): ValidationResult {
+export function validateAlgForCase(
+  raw: string,
+  target: CubeState,
+  algSet: AlgSetId,
+): ValidationResult {
   const parsed = parseAlg(raw)
   if (!parsed.ok) return { ok: false, reason: parsed.reason }
 
   const inverse = invertMoves(parsed.moves)
+  const matches = matcherFor(algSet)
 
   for (let auf = 0; auf < 4; auf += 1) {
     for (const rotation of ROTATIONS) {
       const state = applyMoves(SOLVED, [...rotation, ...AUF_SEQUENCES[auf], ...inverse])
-      if (statesEqual(state, target)) {
+      if (matches(state, target)) {
         return { ok: true, alg: normaliseAlgText(raw), aufOffset: auf as Auf }
       }
     }

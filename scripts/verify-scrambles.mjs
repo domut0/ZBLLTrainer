@@ -64,7 +64,23 @@ for (const c of sample) {
     const p = SOLVED.applyAlg(alg);
     const bad = legality(p);
     if (bad) { illegal++; if (illegal <= 3) console.log(`  ILLEGAL ${c.displayName}: ${bad} — ${entry.scramble}`); }
-    if (idOf(alg) !== c.id) { idMismatch++; if (idMismatch <= 3) console.log(`  ID MISMATCH ${c.displayName} — ${entry.scramble}`); }
+    let expectedId;
+    if (c.algSet === "COLL") {
+      let best = null;
+      let temp = p;
+      for (let i = 0; i < 4; i++) {
+        const s = JSON.stringify([
+          temp.patternData.CORNERS.pieces,
+          temp.patternData.CORNERS.orientation,
+        ]);
+        if (best === null || s < best) best = s;
+        temp = temp.applyAlg(AUF[1]);
+      }
+      expectedId = "COLL:" + best;
+    } else {
+      expectedId = idOf(alg);
+    }
+    if (expectedId !== c.id) { idMismatch++; if (idMismatch <= 3) console.log(`  ID MISMATCH ${c.displayName} — ${entry.scramble}`); }
     checked++;
   }
 }

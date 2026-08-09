@@ -20,8 +20,8 @@ import idsBefore from './__fixtures__/case-ids-before-issue-10.json'
 import { allProgress, getProgress, resetDbForTests, setLearned } from '@/storage/db'
 
 describe('the algorithm set registry', () => {
-  it('ships exactly one set for now, and it is ZBLL', () => {
-    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL'])
+  it('ships ZBLL and COLL', () => {
+    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL', 'COLL'])
     expect(DEFAULT_ALG_SET).toBe('ZBLL')
   })
 
@@ -34,6 +34,7 @@ describe('the algorithm set registry', () => {
   // rendering an empty app.
   it('falls back to the default for an id that is not registered', () => {
     expect(asAlgSetId('ZBLL')).toBe('ZBLL')
+    expect(asAlgSetId('COLL')).toBe('COLL')
     expect(asAlgSetId('LXS')).toBe('ZBLL')
     expect(asAlgSetId(null)).toBe('ZBLL')
     expect(asAlgSetId(42)).toBe('ZBLL')
@@ -41,18 +42,22 @@ describe('the algorithm set registry', () => {
 })
 
 describe('the cases themselves', () => {
-  it('all belong to ZBLL, and every one carries a known subset', () => {
+  it('all belong to ZBLL or COLL, and every ZBLL case carries a known subset', () => {
     const subsets = ALG_SET_BY_ID.get('ZBLL')!.subsets
     for (const c of CASES) {
-      expect(c.algSet).toBe('ZBLL')
-      expect(subsets).toContain(c.subset)
+      if (c.algSet === 'ZBLL') {
+        expect(subsets).toContain(c.subset)
+      } else {
+        expect(c.algSet).toBe('COLL')
+        expect(c.subset).toBe('')
+      }
     }
   })
 
-  it('still numbers 472, bucketed by set', () => {
-    expect(CASES.length).toBe(472)
+  it('numbers 472 ZBLL and 40 COLL cases', () => {
+    expect(CASES.length).toBe(512)
     expect(casesInAlgSet('ZBLL').length).toBe(472)
-    expect(casesInAlgSet('COLL').length).toBe(0)
+    expect(casesInAlgSet('COLL').length).toBe(40)
   })
 
   it('keeps the measured per-subset counts', () => {
@@ -69,7 +74,8 @@ describe('the cases themselves', () => {
    * The fixture was captured from `cases.json` before the importer changed.
    */
   it('has not moved a single case id', () => {
-    expect(CASES.map((c) => c.id).sort()).toEqual(idsBefore)
+    const zbllIds = CASES.filter((c) => c.algSet === 'ZBLL').map((c) => c.id)
+    expect(zbllIds.sort()).toEqual(idsBefore)
     expect(idsBefore.length).toBe(472)
   })
 

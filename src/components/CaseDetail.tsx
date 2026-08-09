@@ -58,7 +58,7 @@ export function CaseDetail({ c, progress, onProgressChange, onBack }: CaseDetail
       return
     }
 
-    const validation = validateAlgForCase(trimmed, c.state)
+    const validation = validateAlgForCase(trimmed, c.state, c.algSet)
     if (validation.ok) {
       try {
         const next = await setCustomAlg(c.id, {

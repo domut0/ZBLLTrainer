@@ -35,10 +35,10 @@ const everyAlg = CASES.flatMap((c) => c.algs.map((a) => ({ case: c, alg: a })))
 
 describe('the client-side cube', () => {
   it('has every algorithm in the dataset to check against', () => {
-    expect(everyAlg.length).toBe(977)
+    expect(everyAlg.length).toBe(1449)
   })
 
-  it('agrees with cubing.js on all 977 algorithms', () => {
+  it('agrees with cubing.js on all 1449 algorithms', () => {
     for (const { alg } of everyAlg) {
       const parsed = parseAlg(alg.alg)
       expect(parsed.ok, `failed to parse "${alg.alg}"`).toBe(true)
@@ -99,7 +99,7 @@ describe('parseAlg', () => {
 describe('validateAlgForCase', () => {
   it('accepts every stored algorithm for its own case, with the stored AUF offset', () => {
     for (const { case: c, alg } of everyAlg.filter((_, i) => i % 3 === 0)) {
-      const result = validateAlgForCase(alg.alg, c.state)
+      const result = validateAlgForCase(alg.alg, c.state, c.algSet)
       expect(result.ok, `rejected "${alg.alg}" for ${c.displayName}`).toBe(true)
       if (result.ok) {
         expect(result.aufOffset, `${c.displayName} "${alg.alg}"`).toBe(alg.aufOffset)
@@ -109,17 +109,17 @@ describe('validateAlgForCase', () => {
 
   it('rejects an algorithm that solves a different case', () => {
     const a = CASES[0]
-    const other = CASES.find((c) => c.id !== a.id && c.subset !== a.subset)!
-    const result = validateAlgForCase(other.algs[0].alg, a.state)
+    const other = CASES.find((c) => c.id !== a.id && c.algSet === a.algSet && c.subset !== a.subset)!
+    const result = validateAlgForCase(other.algs[0].alg, a.state, a.algSet)
     expect(result.ok).toBe(false)
   })
 
   it('rejects an algorithm that solves nothing', () => {
-    expect(validateAlgForCase('R U', CASES[0].state).ok).toBe(false)
+    expect(validateAlgForCase('R U', CASES[0].state, CASES[0].algSet).ok).toBe(false)
   })
 
   it('explains itself rather than failing silently', () => {
-    const result = validateAlgForCase('banana', CASES[0].state)
+    const result = validateAlgForCase('banana', CASES[0].state, CASES[0].algSet)
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.reason.length).toBeGreaterThan(0)
   })

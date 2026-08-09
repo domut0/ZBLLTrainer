@@ -36,6 +36,13 @@ export const ALG_SETS: readonly AlgSetDef[] = [
     subsets: ZBLL_SUBSETS,
     diagram: 'last-layer',
   },
+  {
+    id: 'COLL',
+    label: 'COLL',
+    blurb: 'Last layer corners, preserving edge orientation',
+    subsets: [],
+    diagram: 'last-layer',
+  },
 ]
 
 export const ALG_SET_BY_ID: ReadonlyMap<AlgSetId, AlgSetDef> = new Map(

@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
+import { KPattern } from "cubing/kpuzzle";
 import { cube3x3x3 } from "cubing/puzzles";
 import { llFaceletsAllAufs } from "./facelets.mjs";
 
@@ -234,7 +235,211 @@ for (const [file, setName, expected] of SETS) {
   console.log(`${setName.padEnd(3)} rows seen ${String(seenInSet).padStart(3)}  imported ${String(got).padStart(3)}  expected ${expected}${got === expected ? "" : "   <-- MISMATCH"}`);
 }
 
-console.log(`\ntotal imported: ${cases.length} (expect 472)`);
+// Derive COLL cases from ZBLL cases
+function rebuildState(cubeState) {
+  return new KPattern(kpuzzle, {
+    CORNERS: { pieces: [...cubeState.corners.pieces], orientation: [...cubeState.corners.orientation] },
+    EDGES: { pieces: [...cubeState.edges.pieces], orientation: [...cubeState.edges.orientation] },
+    CENTERS: {
+      pieces: [...SOLVED.patternData.CENTERS.pieces],
+      orientation: [...SOLVED.patternData.CENTERS.orientation],
+      orientationMod: [...SOLVED.patternData.CENTERS.orientationMod],
+    },
+  });
+}
+
+const collGroups = new Map();
+for (const c of cases) {
+  const p = rebuildState(c.state);
+  const forms = [];
+  let temp = p;
+  for (let i = 0; i < 4; i++) {
+    forms.push(JSON.stringify([
+      temp.patternData.CORNERS.pieces,
+      temp.patternData.CORNERS.orientation,
+    ]));
+    temp = temp.applyAlg(U);
+  }
+  const key = forms.sort()[0];
+  if (!collGroups.has(key)) {
+    collGroups.set(key, []);
+  }
+  collGroups.get(key).push(c);
+}
+
+// Verify COLL counts
+const distinctCollCount = collGroups.size;
+const collGroupsArray = Array.from(collGroups.values());
+const groupSizes = collGroupsArray.map(g => g.length);
+const size8 = groupSizes.filter(s => s === 8).length;
+const size12 = groupSizes.filter(s => s === 12).length;
+
+const subsetCounts = {};
+for (const list of collGroupsArray) {
+  const sub = list[0].subset;
+  subsetCounts[sub] = (subsetCounts[sub] || 0) + 1;
+}
+
+const expectedSubsets = { AS: 6, S: 6, Pi: 6, H: 4, L: 6, U: 6, T: 6 };
+let subsetsMatch = true;
+for (const [sub, exp] of Object.entries(expectedSubsets)) {
+  if (subsetCounts[sub] !== exp) {
+    subsetsMatch = false;
+  }
+}
+
+if (distinctCollCount !== 40 || size12 !== 38 || size8 !== 2 || !subsetsMatch) {
+  console.error("\n[ERROR] COLL derivation failed metrics verification!");
+  console.error(`  Distinct COLL count: ${distinctCollCount} (expected 40)`);
+  console.error(`  Groups with 12 cases: ${size12} (expected 38)`);
+  console.error(`  Groups with 8 cases: ${size8} (expected 2)`);
+  console.error("  Subset counts:", subsetCounts);
+  process.exit(1);
+}
+
+/**
+ * COLL is solved when the corners are home and edge orientation survived.
+ * Edge PERMUTATION is deliberately not checked — that is the whole point of
+ * COLL, and checking it is the mistake an earlier draft of the plan made.
+ */
+function collSolvedInFrame(p) {
+  const c = p.patternData.CORNERS;
+  const e = p.patternData.EDGES;
+  return (
+    c.pieces.every((v, i) => v === i) &&
+    c.orientation.every((v) => v === 0) &&
+    e.pieces.slice(4).every((v, i) => v === i + 4) &&
+    e.orientation.every((v) => v === 0)
+  );
+}
+
+/**
+ * ...and an algorithm carrying a net rotation — 10 of the 977 do, either an
+ * explicit x/y/z or a wide move that drags one along — leaves the cube solved
+ * but turned in the hands. That still counts. Undo the turn by brute-forcing
+ * the same 24 rotations the importer already uses, rather than trying to read
+ * the rotation out of the algorithm text.
+ */
+function collSolved(p) {
+  for (const rot of ROTATION_ALGS) {
+    if (collSolvedInFrame(rot.toString() ? p.applyAlg(rot) : p)) return true;
+  }
+  return false;
+}
+
+/**
+ * The post-AUF that makes `alg` solve `repPattern`, or null if none does.
+ *
+ * Mirrors src/drill/reveal.ts at served AUF 0, where the reveal is
+ * `alg . U^-offset`. Every other served AUF follows from the same algebra, so
+ * getting this right at 0 gets it right everywhere — which the reveal tests
+ * check across all four rather than take on trust.
+ */
+function collAufOffset(repPattern, algString) {
+  const applied = repPattern.applyAlg(new Alg(algString));
+  for (let offset = 0; offset < 4; offset++) {
+    const post = AUF_ALGS[(4 - offset) % 4];
+    const end = post ? applied.applyAlg(post) : applied;
+    if (collSolved(end)) return offset;
+  }
+  return null;
+}
+
+const collCases = [];
+const collAlgFailures = [];
+const indexInSubset = {};
+
+for (const list of collGroupsArray) {
+  const rep = list[0];
+  const sub = rep.subset;
+  indexInSubset[sub] = (indexInSubset[sub] || 0) + 1;
+  const idx = indexInSubset[sub];
+
+  const p = rebuildState(rep.state);
+  const forms = [];
+  let temp = p;
+  for (let i = 0; i < 4; i++) {
+    forms.push(JSON.stringify([
+      temp.patternData.CORNERS.pieces,
+      temp.patternData.CORNERS.orientation,
+    ]));
+    temp = temp.applyAlg(U);
+  }
+  const key = forms.sort()[0];
+  const id = "COLL:" + key;
+  const displayName = `${sub} #${idx}`;
+
+  // The borrowed algorithms need their AUF offset RECOMPUTED, not inherited.
+  //
+  // Each member's `aufOffset` was solved against that member's own canonical
+  // orientation. A COLL case is served at the representative's orientation,
+  // and the two differ by a U rotation whenever the member's corner state is
+  // not itself the lexicographically smallest corner form. That is rare —
+  // case ids serialise corners first, so the smallest full state usually
+  // carries the smallest corner form too — but it is not never: ties, which
+  // is to say symmetric corner configurations, break the other way. Five of
+  // the 477 borrowed algorithms land there, and inheriting the offset shows
+  // the user an algorithm that does not solve the cube in their hands.
+  //
+  // Solved for rather than derived, in the spirit of scripts/facelets.mjs:
+  // try all four offsets against the representative and keep the one that
+  // actually works.
+  const repPattern = rebuildState(rep.state);
+  const algs = [];
+  for (const member of list) {
+    const a = member.algs[0];
+    const offset = collAufOffset(repPattern, a.alg);
+    if (offset === null) {
+      collAlgFailures.push(`${displayName}: "${a.alg}" (from ${member.displayName}) solves no AUF of the representative`);
+      continue;
+    }
+    algs.push({ alg: a.alg, aufOffset: offset });
+  }
+
+  const edgeIndices = [1, 3, 5, 7, 10, 13, 16, 19];
+  const facelets = rep.facelets.map(fStr => {
+    const chars = [...fStr];
+    for (const i of edgeIndices) {
+      chars[i] = '?';
+    }
+    return chars.join("");
+  });
+
+  collCases.push({
+    id,
+    algSet: "COLL",
+    subset: "",
+    group: sub,
+    indexInGroup: idx,
+    displayName,
+    state: rep.state,
+    facelets,
+    algs,
+  });
+}
+
+// A borrowed algorithm that solves no AUF of its representative means the
+// grouping is wrong, not that one spreadsheet cell is odd. Fail rather than
+// ship a case whose reveal lies.
+if (collAlgFailures.length) {
+  console.error(`\n[ERROR] ${collAlgFailures.length} COLL algorithms do not solve their case:`);
+  for (const f of collAlgFailures.slice(0, 20)) console.error(`  ${f}`);
+  process.exit(1);
+}
+
+const shortCollCases = collCases.filter((c) => c.algs.length !== 12 && c.algs.length !== 8);
+if (shortCollCases.length) {
+  console.error(`\n[ERROR] COLL cases with an unexpected algorithm count:`);
+  for (const c of shortCollCases) console.error(`  ${c.displayName}: ${c.algs.length}`);
+  process.exit(1);
+}
+
+const zbllCount = cases.length;
+cases.push(...collCases);
+
+console.log(`\ntotal ZBLL imported: ${zbllCount} (expect 472)`);
+console.log(`total COLL derived: ${collCases.length} (expect 40)`);
+console.log(`total cases: ${cases.length} (expect 512)`);
 console.log(`unique case ids: ${new Set(cases.map((c) => c.id)).size}`);
 console.log(`fixes applied: ${fixesUsed.length}`);
 console.log(`rejects: ${rejects.length}`);
@@ -253,3 +458,4 @@ console.log(`cases with no alternatives left: ${cases.filter((c) => c.algs.lengt
 writeFileSync(join(ROOT, "data", "cases.json"), JSON.stringify(cases, null, 0));
 writeFileSync(join(ROOT, "data", "rejects.json"), JSON.stringify({ rejects, warnings }, null, 2));
 console.log("\nwrote data/cases.json and data/rejects.json");
+

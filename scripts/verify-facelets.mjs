@@ -75,7 +75,7 @@ if (llFacelets(SOLVED) !== solvedExpected) {
 // ---------------------------------------------------------------------------
 // 2. Dataset-wide invariants. These hold for every ZBLL case by definition.
 // ---------------------------------------------------------------------------
-const ALPHABET = new Set(Object.values(FACELET_COLOURS));
+const ALPHABET = new Set([...Object.values(FACELET_COLOURS), '?']);
 let checked = 0;
 const seen = new Map();
 
@@ -97,28 +97,47 @@ for (const c of cases) {
     // sticker in the diagram belongs to a last-layer piece.
     if (f.includes(FACELET_COLOURS.D)) report(c.displayName, `auf ${auf}: shows the D colour`);
 
-    // Nine yellow (four corners, four edges, the centre) and three of each side
-    // colour, whatever the orientation happens to be.
     const count = (ch) => [...f].filter((x) => x === ch).length;
-    if (count(Y) !== 9) report(c.displayName, `auf ${auf}: ${count(Y)} yellow, expected 9`);
-    for (const [name, ch] of [["green", G], ["blue", B], ["orange", O], ["red", R]]) {
-      if (count(ch) !== 3) report(c.displayName, `auf ${auf}: ${count(ch)} ${name}, expected 3`);
+
+    if (c.algSet === "ZBLL") {
+      // Nine yellow (four corners, four edges, the centre) and three of each side
+      // colour, whatever the orientation happens to be.
+      if (count(Y) !== 9) report(c.displayName, `auf ${auf}: ${count(Y)} yellow, expected 9`);
+      for (const [name, ch] of [["green", G], ["blue", B], ["orange", O], ["red", R]]) {
+        if (count(ch) !== 3) report(c.displayName, `auf ${auf}: ${count(ch)} ${name}, expected 3`);
+      }
+
+      // Every last-layer edge is oriented in ZBLL, so the U face's edge stickers
+      // and its centre are always yellow.
+      for (const i of U_EDGE_INDICES) if (f[i] !== Y) report(c.displayName, `auf ${auf}: edge at ${i} is ${f[i]}, not oriented`);
+      if (f[U_CENTRE] !== Y) report(c.displayName, `auf ${auf}: centre is ${f[U_CENTRE]}`);
+    } else if (c.algSet === "COLL") {
+      // Five yellow, two of each side colour, eight '?'.
+      if (count(Y) !== 5) report(c.displayName, `auf ${auf}: ${count(Y)} yellow, expected 5`);
+      for (const [name, ch] of [["green", G], ["blue", B], ["orange", O], ["red", R]]) {
+        if (count(ch) !== 2) report(c.displayName, `auf ${auf}: ${count(ch)} ${name}, expected 2`);
+      }
+      if (count('?') !== 8) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 8`);
+      for (const i of [1, 3, 5, 7, 10, 13, 16, 19]) {
+        if (f[i] !== '?') report(c.displayName, `auf ${auf}: edge at ${i} is ${f[i]}, expected '?'`);
+      }
+      if (f[U_CENTRE] !== Y) report(c.displayName, `auf ${auf}: centre is ${f[U_CENTRE]}`);
     }
 
-    // Every last-layer edge is oriented in ZBLL, so the U face's edge stickers
-    // and its centre are always yellow.
-    for (const i of U_EDGE_INDICES) if (f[i] !== Y) report(c.displayName, `auf ${auf}: edge at ${i} is ${f[i]}, not oriented`);
-    if (f[U_CENTRE] !== Y) report(c.displayName, `auf ${auf}: centre is ${f[U_CENTRE]}`);
-
     // Recompute from the stored state by an independent route.
-    const expected = llFacelets(state.applyAlg(AUF_ALGS[auf]));
+    let expected = llFacelets(state.applyAlg(AUF_ALGS[auf]));
+    if (c.algSet === "COLL") {
+      const chars = [...expected];
+      for (const idx of [1, 3, 5, 7, 10, 13, 16, 19]) chars[idx] = '?';
+      expected = chars.join("");
+    }
     if (f !== expected) report(c.displayName, `auf ${auf}: stored ${f} != recomputed ${expected}`);
   }
 
   // The 21 stickers determine the last-layer state completely, so no two of the
   // 472 cases may share a diagram. This is the check that would catch a mapping
   // that collapses distinct cases onto the same picture.
-  const key = c.facelets[0];
+  const key = `${c.algSet}:${c.facelets[0]}`;
   if (seen.has(key)) report(c.displayName, `same auf-0 diagram as ${seen.get(key)}`);
   else seen.set(key, c.displayName);
 }
@@ -150,20 +169,21 @@ const antiSuneSig = twistSignature(llFacelets(SOLVED.applyAlg(new Alg("R U2 R' U
 if (suneSig === antiSuneSig) report("chirality", "Sune and Anti-Sune have the same signature; the check is vacuous");
 
 for (const c of cases) {
-  const expectedOriented = ORIENTED_CORNERS[c.subset];
+  const subsetName = c.algSet === "COLL" ? c.group : c.subset;
+  const expectedOriented = ORIENTED_CORNERS[subsetName];
   const signatures = new Set();
   for (const f of c.facelets) {
     const oriented = [0, 2, 6, 8].filter((i) => f[i] === Y).length;
     if (oriented !== expectedOriented) {
-      report(c.displayName, `${oriented} oriented corners, expected ${expectedOriented} for subset ${c.subset}`);
+      report(c.displayName, `${oriented} oriented corners, expected ${expectedOriented} for subset ${subsetName}`);
     }
     signatures.add(twistSignature(f));
   }
   // Turning the top layer cannot change how a corner is twisted.
   if (signatures.size !== 1) report(c.displayName, `twist signature varies across AUFs: ${[...signatures].join(" ")}`);
   const sig = [...signatures][0];
-  if (c.subset === "S" && sig !== suneSig) report(c.displayName, `subset S but signature ${sig}, not Sune's ${suneSig}`);
-  if (c.subset === "AS" && sig !== antiSuneSig) report(c.displayName, `subset AS but signature ${sig}, not Anti-Sune's ${antiSuneSig}`);
+  if (subsetName === "S" && sig !== suneSig) report(c.displayName, `subset S but signature ${sig}, not Sune's ${suneSig}`);
+  if (subsetName === "AS" && sig !== antiSuneSig) report(c.displayName, `subset AS but signature ${sig}, not Anti-Sune's ${antiSuneSig}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -193,7 +213,13 @@ for (const c of cases) {
     for (let r = 0; r < ROTATIONS.length; r++) {
       const derived = SOLVED.applyAlg(ROTATIONS[r].concat(auf).concat(inv));
       if (!centresSolved(derived)) continue;
-      if (llFacelets(derived) === c.facelets[0]) { matchedAt = r; break; }
+      let faceletRep = llFacelets(derived);
+      if (c.algSet === "COLL") {
+        const chars = [...faceletRep];
+        for (const idx of [1, 3, 5, 7, 10, 13, 16, 19]) chars[idx] = '?';
+        faceletRep = chars.join("");
+      }
+      if (faceletRep === c.facelets[0]) { matchedAt = r; break; }
     }
     if (matchedAt === -1) {
       report(c.displayName, `alg "${a.alg}" (auf ${a.aufOffset}) yields no rotation that reproduces the stored diagram`);
@@ -214,7 +240,13 @@ const sample = cases.filter((_, i) => i % 7 === 0);
 for (const c of sample) {
   for (const s of (scrambles[c.id] ?? []).slice(0, 4)) {
     const state = SOLVED.applyAlg(new Alg(s.scramble));
-    if (llFacelets(state) !== c.facelets[s.auf]) {
+    let stateFacelets = llFacelets(state);
+    if (c.algSet === "COLL") {
+      const chars = [...stateFacelets];
+      for (const idx of [1, 3, 5, 7, 10, 13, 16, 19]) chars[idx] = '?';
+      stateFacelets = chars.join("");
+    }
+    if (stateFacelets !== c.facelets[s.auf]) {
       report(c.displayName, `scramble "${s.scramble}" (auf ${s.auf}) does not match facelets[${s.auf}]`);
       break;
     }

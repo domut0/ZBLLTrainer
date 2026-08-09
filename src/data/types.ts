@@ -48,7 +48,7 @@ export type Auf = 0 | 1 | 2 | 3
  */
 export type FaceletString = string
 
-export type FaceletColour = 'Y' | 'G' | 'O' | 'B' | 'R' | 'W'
+export type FaceletColour = 'Y' | 'G' | 'O' | 'B' | 'R' | 'W' | '?'
 
 export interface CubeState {
   corners: { pieces: number[]; orientation: number[] }
@@ -101,4 +101,5 @@ export const FACELET_FILL: Record<FaceletColour, string> = {
   B: '#0051ba',
   R: '#c41e3a',
   W: '#f5f5f5',
+  '?': '#71717a',
 }

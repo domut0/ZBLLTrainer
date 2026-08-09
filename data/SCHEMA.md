@@ -3,6 +3,20 @@
 Frozen ahead of the importer so dependent work can start. Issue 02 must produce
 exactly this; Issues 03, 06 and 07 may rely on it.
 
+**Amended 2026-08-09 (Issue 11)** — added the `COLL` set, derived at build time
+from the ZBLL cases rather than from any new source data. Added `?` to the
+`FaceletString` alphabet for a "don't care" sticker, used at the four
+last-layer edge positions: a COLL case has no defined edge permutation, so
+drawing one would be a lie.
+
+A COLL case's algorithms are borrowed from the twelve ZBLL cases under it, and
+each one's `aufOffset` is **re-solved against the COLL representative** rather
+than inherited. The inherited offset was solved against the member's own
+canonical orientation, which differs by a U rotation whenever the corner state
+is symmetric — five of the 472 borrowed algorithms, each producing a reveal
+that did not solve the cube. `scripts/verify-coll-reveal.mjs` checks all 1888
+case/algorithm/AUF combinations exhaustively; sampling missed exactly these.
+
 **Amended 2026-08-08 (Issue 10)** — a case now names the *algorithm set* it
 belongs to. `set` became two fields, `algSet` and `subset`, because the word was
 doing two jobs: naming ZBLL's seven OLL-derived groupings while ZBLL itself went
@@ -91,7 +105,7 @@ interface TrainerCase {
   algs: CaseAlg[];
 }
 
-type CasesFile = TrainerCase[]; // exactly 472 entries, all ZBLL
+type CasesFile = TrainerCase[]; // 512 entries: 472 ZBLL + 40 derived COLL
 ```
 
 ### `FaceletString`
@@ -106,6 +120,7 @@ type CasesFile = TrainerCase[]; // exactly 472 entries, all ZBLL
 | `B` | blue | B |
 | `R` | red | L |
 | `W` | white | D — **never appears in a last-layer diagram** |
+| `?` | grey | don't care — **used for COLL edges** |
 
 Index layout, as the diagram is drawn (green front at the bottom):
 
@@ -128,15 +143,23 @@ Each bar is already ordered to line up with the edge of the square it touches,
 so a renderer never has to reason about the cube. Invariants that hold for every
 case and every AUF, and are checked in `scripts/verify-facelets.mjs`:
 
-- exactly nine `Y`, and exactly three each of `G`, `O`, `B`, `R`
-- no `W` anywhere
-- indices 1, 3, 5, 7 are always `Y` — every last-layer edge is oriented in ZBLL
-- all 472 `facelets[0]` values are distinct, because the 21 stickers determine
-  the last-layer state completely
+- For ZBLL:
+  - exactly nine `Y`, and exactly three each of `G`, `O`, `B`, `R`
+  - no `W` anywhere
+  - indices 1, 3, 5, 7 are always `Y` — every last-layer edge is oriented in ZBLL
+  - all 472 `facelets[0]` values are distinct, because the 21 stickers determine
+    the last-layer state completely
+- For COLL:
+  - exactly eight `?`, at the edge positions (indices 1, 3, 5, 7, 10, 13, 16, 19)
+  - exactly five `Y` (the oriented corner U stickers plus center) and exactly two each of `G`, `O`, `B`, `R` (corner side stickers)
+  - no `W` anywhere
+  - all 40 `facelets[0]` values are distinct, because the 12 corner stickers determine the last-layer corner state completely
 
-Counts, per ZBLL subset: 72 each for `T`, `U`, `L`, `Pi`, `S`, `AS`; 40 for `H`.
-The H sheet's header says 0/72 — that is a copy-paste artifact in the source,
-not a target.
+Counts:
+- ZBLL, per subset: 72 each for `T`, `U`, `L`, `Pi`, `S`, `AS`; 40 for `H`.
+  The H sheet's header says 0/72 — that is a copy-paste artifact in the source,
+  not a target.
+- COLL, per ZBLL subset: 6 each for `T`, `U`, `L`, `Pi`, `S`, `AS`; 4 for `H` (= 40 cases total).
 
 ## `data/scrambles.json`
 
