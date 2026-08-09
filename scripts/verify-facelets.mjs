@@ -124,6 +124,49 @@ for (const c of cases) {
 }
 
 // ---------------------------------------------------------------------------
+// 2b. Corner orientation, per set. The seven ZBLL sets are the seven OCLL
+//     cases, each with a known number of already-oriented corners and a known
+//     twist pattern. This is the check that catches a mirrored mapping: a
+//     chirality flip would silently swap Sune with Anti-Sune, and every other
+//     check in this file would still pass.
+// ---------------------------------------------------------------------------
+const ORIENTED_CORNERS = { S: 1, AS: 1, H: 0, Pi: 0, T: 2, U: 2, L: 2 };
+
+// Each U corner with its two side stickers in a consistent rotational order:
+// [U index, clockwise neighbour, anticlockwise neighbour]. Clockwise around the
+// top face reads B -> R -> F -> L.
+const CORNER_STICKERS = [[0, 9, 18], [2, 12, 11], [8, 17, 14], [6, 20, 15]];
+
+const twistSignature = (f) =>
+  CORNER_STICKERS.map(([u, cw]) => (f[u] === Y ? 0 : f[cw] === Y ? 1 : 2))
+    .filter((v) => v !== 0)
+    .sort()
+    .join("");
+
+// Established from the real algorithms, not asserted from memory: the case a
+// Sune solves, and the case an Anti-Sune solves.
+const suneSig = twistSignature(llFacelets(SOLVED.applyAlg(new Alg("R U R' U R U2 R'").invert())));
+const antiSuneSig = twistSignature(llFacelets(SOLVED.applyAlg(new Alg("R U2 R' U' R U' R'").invert())));
+if (suneSig === antiSuneSig) report("chirality", "Sune and Anti-Sune have the same signature; the check is vacuous");
+
+for (const c of cases) {
+  const expectedOriented = ORIENTED_CORNERS[c.set];
+  const signatures = new Set();
+  for (const f of c.facelets) {
+    const oriented = [0, 2, 6, 8].filter((i) => f[i] === Y).length;
+    if (oriented !== expectedOriented) {
+      report(c.displayName, `${oriented} oriented corners, expected ${expectedOriented} for set ${c.set}`);
+    }
+    signatures.add(twistSignature(f));
+  }
+  // Turning the top layer cannot change how a corner is twisted.
+  if (signatures.size !== 1) report(c.displayName, `twist signature varies across AUFs: ${[...signatures].join(" ")}`);
+  const sig = [...signatures][0];
+  if (c.set === "S" && sig !== suneSig) report(c.displayName, `set S but signature ${sig}, not Sune's ${suneSig}`);
+  if (c.set === "AS" && sig !== antiSuneSig) report(c.displayName, `set AS but signature ${sig}, not Anti-Sune's ${antiSuneSig}`);
+}
+
+// ---------------------------------------------------------------------------
 // 3. Re-derive from the algorithms rather than the stored state. The importer
 //    built `state` from the algorithm; this walks the same road from the other
 //    end, so a bug in `toCubeState` would show up here.
