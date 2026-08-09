@@ -8,6 +8,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
 import { cube3x3x3 } from "cubing/puzzles";
+import { llFaceletsAllAufs } from "./facelets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kpuzzle = await cube3x3x3.kpuzzle();
@@ -219,6 +220,9 @@ for (const [file, setName, expected] of SETS) {
       indexInGroup,
       displayName: `${group} #${indexInGroup}`,
       state: toCubeState(caseState),
+      // One diagram per AUF, derived here rather than in the app: see the
+      // header of scripts/facelets.mjs for why this is not the component's job.
+      facelets: llFaceletsAllAufs(caseState),
       algs,
     });
   }
