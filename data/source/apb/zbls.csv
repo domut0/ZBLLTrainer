@@ -1,0 +1,533 @@
+,"(U) R U' R'
+(U2) R U2' R'",,"(U) R B U' B' R'
+","
+
+
+",,y' R U2 R2 U' R2 U' R',,F R' F' R U' R U' R' U R U' R'
+,(U) R U R' U2' R' F R F',,R' F R2 U R' U' F',"
+
+
+",,F' U r' F2 r U2 F,,F' L' U' L U' L' U L U' F 
+,R' F R F',,(U) F' r' F' r F,"
+
+
+",,R U R' U R' F R F' R' F R F',,(U') R U2 R' U F' U' F
+,(U) S' R U' R' S,,"R' F R S R U R' U' f'
+
+","
+
+
+",,R U2 R' U' F' r' F2 r F,,F R' F' R U' R U' R2 F R F'
+,,,,"
+
+
+",,,,
+,(U') R U R' U2 R U' R',,S U' R U R' S' U2 R U' R',"
+
+
+",,(U') R U' R' U F' U' F,,"(U2) y' R' U R U R' U' R
+(U) y' R' U' R U' R' U' R"
+,"(U') R U R' U R' F R F'
+",,(U') R U R' U2 S' R U' R' S,"
+
+
+",,"R' U' R S R' S' R' U R
+",,"F' U r' F' r U2 F
+"
+,F U F' R' F R U' F',,"(U2) R B U B' U2' R'
+(U2) R f R f' U2 R'","
+
+
+",,"(U) r U R' U' r' R2 U' R'
+",,"F R U R' U' F' R U' R'
+"
+,"(U') r U' r' U2 r U r' R U2' R'
+(U2) R2 D r' U' r D' R' U' R'
+",,"R' D' R U R' D F R F'
+","
+
+
+",,(U') R U' R2' U' F' U F2 R F',,(U) r U' r' U2 r U r' R U' R'
+,,,,"
+
+
+",,,,
+,(U') R U2 R' U2 R U' R',,"R' D' R U2 R' D F R F'
+","
+
+
+",,"F' U' F
+",,(U2) S' R U' R' S R U' R'
+,(U') R U2 R' U R' F R F',,"(U) F U R U' R' F' U R U' R'
+","
+
+
+",,"S R' U' R' U R S'
+",,"(U) M U r U2' r' U' M'
+"
+,"R U R' U R U' R2 F R F'
+
+",,"R' D' r U2 r' D F R F'
+","
+
+
+",, S U R U' R' S',,"(U') R' F R U R U' R2 F' R
+"
+,"F R' F' R U2 R U' R' U R U' R'
+",,M' U' M U2 r U' r',"
+
+
+",,"F' U2' r' F r F
+(U') R' U' F' U F2 R F'
+(U) R2 D r' U' r D' R2
+",,"(U2) S' R U' R' S U' R' F R F'
+"
+,,,,"
+
+
+",,,,
+,"R' D' R U' R' D R U R U' R'
+(U2) R U R' U' R' D' R U R' D R",,F' U F U2' R U R',"
+
+
+",,(U) R U' R' U R U' R' F R' F' R,,M' U' R U R' U2 R U' r'
+,R U R' U2 R U' R2 F R F',,(U) S' R U R' S R U2 R',"
+
+
+",,S' R U R' S R U' R2 F R F',,(U') S' R U R' S U' R U2' R'
+,M U r U' r' U' M',,R' D' R U' R' D F R F',"
+
+
+",,"R U R' U' R' F R F' U R U' R'
+",,"R' F R U2 r U' r' U2 F'
+(U2) r U2 r' U' r U r' U r U2 r'
+"
+,R U2 R2 F R F' U2 R U' R',,"(U) R U' R D r' U r D' R' U' R'
+(U2) R' D' r U r' D R U2 R U' R'","
+
+
+",,"M' U' R U' r' U2 r U' r'
+(U2) F' r' F r U' r' F2 r F",,(U2) R U R D r' U r D' R' U R'
+,,,,"
+
+
+",,,,
+,(U') R U' R' U R U R',,(U') R U' R' U S' R U R' S,"
+
+
+",,(U) M' U R U' r' U' R U R',,"R U' R' U2 F' U' F
+"
+,"R U R' U' R' F R F' R U R'
+",,(U') R U' R' U' r U' r' U' r U r',"
+
+
+",,S' R U R' S R' F R F' R U R',,(U2) R U R' F' r' F2 r F
+,"(U') R' F R2 U R' U' R' F' R
+",,(U') S R U' R' U S' R U R',"
+
+
+",,"(U) f U R U' R' f' R U R'
+(U') f U R U' R' f' R U2' R'",,"(U) F U R U' R' F' R U R' 
+"
+,(U') S R U' R' U R U R' U' S',,"(U2) r U' r' U2 r U r' U R U R'
+
+","
+
+
+",,(U) r U' r' U2 r U r' U' R U R',,"(U) R U2 R' F' r' F2 r F
+"
+,,,,"
+
+
+",,,,
+,R U R',,S' R U2 R' S R U' R',"
+
+
+",,(U) y' R' U2 R U R' U2' R,,(U') F' U' r' F2 r U2' F
+,S' R U R' S,,S R U2' R' U R U2' R' S',"
+
+
+",,"(U) F' U2 r' F r U' F 
+",,"(U') r' F' r U r U' r2' F2 r F
+"
+,S R U R' U' S',,(U2) r U' r' U' r U r',"
+
+
+",,"F' U' r' F2 r U' F
+",,(U2) R' F R2 U' R' U' R U R2' F' R
+,"R U2' B U' B' R'
+(U) F U R U' R2 F' R
+",,"R' D' r U r' D R2 U R'
+","
+
+
+",,(U) R' D' r U r' R U2 R' D R,,r U r' U' R U' M' U r'
+,,,,"
+
+
+",,,,
+,"(U2) R U' R' U' R U R'
+(U') R U R' U R U R'",,(U) S U R U' R' U' R U R' S',"
+
+
+",,(U) y' R' U' R U R' U2 R ,,"(U') r U' R' U R U r'
+"
+,"(U) F R' F' R U2 R U' R' 
+",,"R' F R F' U2 R U R' U' R U R'
+","
+
+
+",,"(U) F' U' r' F r U' F
+",,"(U2) F' r' F' r U2' F
+"
+,(U) f R' F' R S' U2 R U' R',,S' R U' R' S U2 R' F R F',"
+
+
+",,"(U2) R' F' U' F U R2 U' R' 
+",,"R' U' R F R2' F' R U R 
+"
+,(U') R U R' U S' R U R' S,,"(U2) r U' R' U' R U r'
+","
+
+
+",,"R2 D r' U' r D' R' U R'
+",,"(U2) F R' F' R U2 S' R U R' S
+(U) R U' R' F' r' F2 r U' F"
+,,,,"
+
+
+",,,,
+,"(U') F' U F
+",,(U') F' r' F r F,"
+
+
+",,R U' R' U R U' R' U2 R U' R',,R U' R' U R U' R' U R' F R F'
+,(U) R' D' r U' r' D R,,"(U') R' U' R S R S' R' U R
+F R' F2 U' F U R
+","
+
+
+",,R' F' U' F U R U R U R',,"R U R' U R' F R F' R U R'
+"
+,F R' F' R,,"(U') R B U B' R' 
+(U') R f R f' R'
+","
+
+
+",,(U2) F' r' F2 r U' F R' F R F',,(U) F' U2 F U' R U R'
+,"(U') S R' U' R U R S'
+(U2) F' U r' F r F",,(U) f U R U' R' S' R' F' R,"
+
+
+",,(U') R' U2 R2 U R2 U F R F',,"F' U F U' R U2 R2 F R F'
+"
+,,,,"
+
+
+",,,,
+,R U2 R' U' R U R',,"R U R' U' F R' F' R2 U R'
+","
+
+
+",,(U') R U R2 F R F' R U' R',,(U) F' r' F r F R U R'
+,"(U') F U R U2 R' U' R U R2' F' R
+",,R U2' r' U' R U R' M',"
+
+
+",,(U') R' F R F' U' F' U' F,,"(U') R U' R' F' r' F' r U' F
+"
+,F' U' F U R U' R' U R U' R',,"R U2 R' U' S' R U R' S
+","
+
+
+",,"R U' R' U r U' R' U R U r'
+(U2) R' F' U' F U R U' R U R'",,F U R U' R' F' R U' R'
+,(U') R U' R' U2 R U2' R2' F R F',,"(U') R U' f R' U R' U' f' R'
+","
+
+
+",,"r U R' U R U r' U' r U r'
+",,"(U2) f' R U R' S U' R' F2 R F'
+R U' R2' D' r U r' R U R' D R"
+,,,,"
+
+
+",,,,
+,(U) R U2' R' U R U' R',,"(U) R U2 R' U S' R U' R' S
+","
+
+
+",,"(U2) y' R' U' R U' R' U R
+y' R' U R U2 R' U' R",,"(U2) F' r U' r' F2
+"
+, (U) R U2' R' U R B U' B' R' ,,(U) R U2 R2 F R F',"
+
+
+",,F' r' F2 r F,,"(U2) S' R U R' S R' F R F'
+"
+,"(U) R U2 R2 U' F U R U' F'
+",,(U') r U' R' U' R U r' U R U' R',"
+
+
+",,"(U2) R U R' F' U' F
+F' r' F r U F",,"(U2) S' R U R' S U R U' R'
+"
+,(U) F R U R' U' F' R U R',,"(U') R f R' U R' U' f' R'
+","
+
+
+",,"(U') F' r' F' r U' F
+",,"(U) R' U2 R2 U R' S R S' R' U R
+(U') F R' F' R U2 F' r' F r F"
+,,,,"
+
+
+",,,,
+,"(U2) R U R' U R U' R'
+R U' R' U2 R U R' ",,(U2) R U R2 F R F',"
+
+
+",,(U') y' R' U2 R U' R' U R ,,"(U') F R' F' D' R U' R' D R
+"
+,R B U2' B' R',,"F R' F' R U F R' F' R2 U R'
+
+","
+
+
+",,R' F2 R U' F U R' F2 R,,(U') F' U' r U' r' F2
+,(U2) F' U' F R U R',,(U) R U' R' U2 R U' R2' F R F',"
+
+
+",,R' U' R' F R F' U R2 U' R',,(U') R U' R2 F R F' R U' R'
+,"f U R U' R' f' R U' R'
+",,"(U) F R' F' R2 U' R' U R U R'
+(U2) R U R' U S' R U' R' S
+","
+
+
+",,r' F' r U r U' r' U2 F,,(U') R U' R2 F R F' U' R' F R F'
+,,,,"
+
+
+",,,,
+,R' F R F' R U' R' U R U' R',,"(U) R U' R2 F R F' U R U' R'
+","
+
+
+",,(U) R U' R' U' R U' R' U R U' R',,(U) R U' R' U' R U' R2 F R F'
+,(U) R' F' U' F U R2 U R2 F R F',,"R U R' F' r' F2 r U' F
+y' R' U2' r U R' U' R2 r'
+","
+
+
+",,(U) F R' F' R U R U R' ,,"(U') S U' R U R' S' U R U' R'
+"
+,(U) R U' R2 F R F' R' F R F',,"R' F R F' R U' R2' F R F'
+","
+
+
+",,"(U2) R U2' R' U' R U' R2' F R F'
+F' U2' F R U2' R' U2 R U' R'",,"(U) R' F R F' R U R' U2 R U' R'
+"
+,"R U2' R' U F' r' F' r U2' F
+",,"F R' F' R2 U' R' U R U2' R2' F R F' 
+","
+
+
+",,"(U') F U R' U' F' U R2 U' R'
+
+",,"(U) F R' F' R U S' R U R' S
+"
+,,,,"
+
+
+",,,,
+,(U') R U' R' U2 R U' R',,(U') R' D' F' U' F U D R,"
+
+
+",,(U2) R U R' U' F' U F,,"(U2) R U' R' U' F' U' F
+"
+,"(U') S R U' R' U2 R U' R' S'
+(U') R U' R' U2 S' R U' R' S",,"(U') F' U2 r' F2 r F
+
+
+","
+
+
+",,(U2) R U' r' U r U2' r' U' M',,(U') R U R2' U' F' U F2 R F'
+,"R S R' U R U' S' R'
+",,"(U) R U' R2' F R F' R U R' 
+","
+
+
+",,"(U') R U R' U F' U' F 
+(U) M' U R U' r' R U' R'",,"(U2) R U R' F R' F' R
+"
+,(U') R U' R' U R' F R F',,"(U') F R' F' R2 U2 R2 F R F'
+","
+
+
+",,(U2) R U' R D r' U' r D' R2,,(U) R' D' r U r' D R2 U2 R'
+,,,,"
+
+
+",,,,
+,"(U') R' D' R U R' D R
+(U) R' D' R U' R' D R
+(U2) R' D' R U2 R' D R",,"(U) R U' R' F R' F' R2 U R'
+","
+
+
+",,(U) F' U' F U' R U R',,(U2) F' U' F R' F R F'
+,(U) F' U r' F r U' F,,"R U R' U2 R' F R F' R U R'
+","
+
+
+",,"(U2) F R' F2 U' F U R2 U' R'
+R2 D r' U r D' R' U R'",,"(U2) R U2' R' F' r' F2 r U' F
+"
+,F R' F' R U' R' F R F' R U R' ,,"(U) S R U R' U2 R U R' S'
+","
+
+
+",,(U2) F' U' F U R U' R',,"(U2) F' U F U R U R'
+"
+,"(U') R U2 R' U S' R U R' S 
+",,"(U) r U2 r' U2 r U r' U2 r U2 r'
+","
+
+
+",,"(U2) R U' R' U F' r' F' r U2' F
+",,"F U R U' R2' F' R F' U F
+(U2) R U' R' F' U' r' F r U' F
+"
+,,,,"
+
+
+",,,,
+,(U) R U' R' U R U' R' U R U' R',,(U) R U' R' U R U' R2 F R F',"
+
+
+",,"R U' R' F' U2' F
+(U) R U2' R' F' U' F",,R U' R' U2' F R' F' R
+,"(U2) F' U r' F' r U' F
+",,"(U2) F R' F' R2 U R' U R U' R' 
+","
+
+
+",,R U' R' U S R' U' R U R S',,(U') R U2' R' F' r' F' r U' F
+,(U') F' U r' F2 r U' F,,"F R' F' R2 U R' U' R U R'
+(U') R U R' U' R U R2 F R F'","
+
+
+",,(U') R' F R F' R U' R',,"F' U F R U2' R'
+(U') F' U2' F R U R'"
+,(U') F R' F' R U' R U R',,(U2) r U2 r' U2 r U' r' U2 r U2 r',"
+
+
+",,(U') R' F R F' U' R' F R F',,(U2) F' r' F' r U' F R U R'
+,,,,"
+
+
+",,,,
+,R U R' U' R U R',,F R' F' R F R' F' R,"
+
+
+",,R U R' U' F R' F' R,,S' R U R' S U' R U R'
+,"U' F R' F' R2 U R'
+",,(U') R U' B U2' B' R',"
+
+
+",,(U) F' r' F2 r U' F,,(U') F' r' F r U r' F r U' F
+,U2 F' U F R U R',,(U2) R' F R F' R U' R' U2 R U R',"
+
+
+",,F U R U' R2 F' R2 U R',,R U2 R' F' U2' F
+,"R U r' U' R U R' M'
+",,(U') S R' U' R U R S' R U R',"
+
+
+",,"(U2) F' U' r' F' r U' F 
+",,"R U2 R2' F R F2' U2 F
+"
+,,,,"
+
+
+",,,,
+,R U' R' U R U' R',,R' D' R U R' D R U' R' F R F',"
+
+
+",,"R' F R F' U R U' R'
+",,"R' F R F' R' F R F'
+"
+,R U' R2 F R F',,"(U2) R U R' U R U R2' F R F'
+R U' R2 U' F U R U' F'","
+
+
+",,(U) R' F R F2' U' F,,(U) F' U r' F2 r F 
+,"F' U' F U' R U2 R'
+",,"F' U2' F R U2' R'
+","
+
+
+",,"(U2) R U' R' F' U' F
+",,(U2) S' R U' R' S U R U' R'
+,"(U) r' R2 U' R' U r U' R'
+",,F' U2' F2' R' F' R2 U2' R',"
+
+
+",,"S R' F R F' U R U' R' S'
+",,(U2) R U' R' S R' U' R' U R S'
+,,,,"
+
+
+",,,,
+,"R' F' R U R U' R' F
+(U') F' R U R' U' R' F R",,(U') F' U F U R U' R',"
+
+
+",,"(U2) R S' R' U' R S R'
+",,(U) R U' R' U' F' U F
+,"(U') f' R' F R U R' F' R f
+",,"f' U2 r' F' r U2 f
+","
+
+
+",,(U2) S R S' R' U' R S R' S',,S R' U' R U R S' U R U' R'
+,(U') R' F R F' R U R',,"(U') F' U' F U R U R'
+","
+
+
+",,"(U) R U' R' F R' F' R
+",,(U) R U R' U' F' U' F
+,"(U) f' R' F R U' R' F' R f
+",,"(U) R2 D r' U r D' R' U' R'
+","
+
+
+",,"S R S' R' U R S R' S'
+",,(U) F R' F' R S U R U' R' S'
+,,,,"
+
+
+",,,,
+,R U' R' U' R U R' U2 R U' R',,R U' R' U R U2' R' U R U' R',"
+
+
+",,(U) R2 f R f' U' R' U R',,R U' R U B U' B' R2'
+,"F R' F' R2 U2 R' U' R U R'
+",,"R U' R' U R U2 R2 F R F'
+","
+
+
+",,R U' R' F' r' F2 r F,,F' r' F2 r F R U R'
+,"(U) R U' R' U' R U R' U R' F R F'
+",,"R U2 R' U R' F R2 U R' U' R' F' R
+","
+
+
+",,R' F R F' R U' R' U R U' R' U2 R U' R',,(U') r U' r' R U R' U r U' r' R U R'
+,M' U R U' R' U' R U' r' U2 r U' r',,R U R D r' U r D' R2 U2 R U R',"
+
+
+",,,,

@@ -1,0 +1,39 @@
+Cases are organized first by the location of the DFR corner sticker in each sheet name. Then within each sheet the cases are organized by the position of the edge that should be at DR and the one that should be at FR.,,,,
+DR edge at UF,,,,
+,,,,
+1: UF/UL,2: UF/UB,3: UF/UR,4: UF/FR,5: UF/DR
+(U2) R U R2 U' R' U R,(U) R U2 R2 U' R' U R,(U') R' U' R2 U R2' U R',(U2) R D' R U R' D R',(U) R' U2 R U2 R
+(U) R U D' R U R' D R',(U) R' U2 R U R' U' R U R U R,(U') R U R U' R2 U' R2 U R2,(U') R2 U' R2 U' R2 U R2,
+,,R U R' U' R' U' R U R2 U R',R' U' R U R2 U2 R' U R U' R',
+DR edge at UL,,,,
+,,,,
+6: UL/UF,7: UL/UB,8: UL/UR,9: UL/FR,10: UL/DR
+R' U' R U' R U2 R,R U F' R U R' U' R' F R U R',(U) F R f' R U R' S U R',R2 U' R2 U2 R2 U R2,R U R' U R U2' R' U R' U' R U R
+,(U) R U2' R2' U' R U R2 U' R',R U2 R D' R U' R' U D R,(U') R' U' R U R2 U R' U' R U R',R' U2' R D' R U R' U D R
+,(U) R U' R2 U' R2' U' R U2 R,S R2' S' R3 U' R' U2 R U R',,R U' R' U R U' R2 U' R U R
+DR edge at UB,,,,
+,,,,
+11: UB/UF,12: UB/UL,13: UB/UR,14: UB/FR,15: UB/DR
+(U') R' U' R U' R' U R2 U R,(U2) R U R' U R U' R' S R2' S' R2,(U') R' U' R U' R U2 R2 U R' , R UD' R U' R' U R U' R' UD R' ,R U' R' U R U2 R2 U' R U R
+(U2) R U R' U' R D' R U' R' D R',(U') R' U2 R2 U R' U R U' R U R' ,R2 U R' U2 D R' U' R U D' R',R U R2 U2' R' U2 R2 U' R',(U2) R' U' R U' D' R U R' U D R 
+(U2) R' U' R U' R U R' U R2 U R',R U' R2 U2 R U2 R2 U' R',,(U2) R' U' R U R2 U R' U R U' R',(U2) R' U2' R U R2 U' R' U2 R2 U' R'
+,(U) R2' F R U R2 U' R' F' R2,,(U') R' U2' R U R U' R' U2 R2 U' R',
+,,,(U) R U' R' U R U' R2 U' R' U R,
+DR edge at UR,,,,
+,,,,
+16: UR/UF,17: UR/UL,18: UR/UB,19: UR/FR,20: UR/DR
+R U R' U R' U' R U R2 U R',(U2) R U R' U R' U' R2 U R,(U) R U2 R' U R' U' R2 U R,(U2) R' U2' R U2 R U' R U R',R U' R' U R' U' R U R
+(U) R' U' R2 U' R' U2 R U' R U R',(U) R' U' R U R U2 R U' R',,(U) R U' R' U R U' R' U R' U' R2 U R,
+,R U' R' U R' U2' R U R U R,,(U2) R U' R2 U' R U R U2' R U' R',
+DR edge at FR,,,,
+,,,,
+21: FR/UF,22: FR/UL,23: FR/UB,24: FR/UR,25: FR/DR
+(U') R U R' U R' U' R U' R U2 R,(U2) R U R2' U' R U R2 U' R',R S' R U' R' f R' F' R U' R',(U) R' U' R U' R U R' U' R U2 R,(U) R' U2 R' U2 R2 U2 R'
+(U') R U' D' R U R' D R' U' R U R',R U R2' U' R U R2 U R',R U R U' R' U2 R' D' R U2 R' D ,(U') F R2' F' R U R' U' F R2 F',(U) R' U2 R U2 R' S R2' S'
+,R U D' R U' R' U2 D R',(U) R U2 R' U2 R' U2 R2 U2 R,,
+DR edge at DR,,,,
+,,,,
+26: DR/UF,27: DR/UL,28: DR/UB,29: DR/UR,30: DR/FR
+(U2) R2 U2 R' U' R U' R2',(U2) R U R' U R U' R',(U) R U2 R' U R U' R',R U2 R' U' R U R',(U) R U' R' U R U' R' U R U' R'
+R U' R2 D' R U2 R' D R,R U' R' U2 R U R',,,(U2) R2 U2 R2 U' R2 U' R2
+(U) R U' R' U' R U' R' U R U' R',,,,R U R' U' R U R' U' R U R'

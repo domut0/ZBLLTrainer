@@ -30,6 +30,13 @@ schema were kept in-house.
 
 117 tests, `tsc --noEmit` clean, production build clean.
 
+## New scope, not yet started
+
+Support for **COLL, ZBLS, LXS and EO** was requested on 2026-08-09. The source
+CSVs are committed under `data/source/apb/`, and the research, the measured
+COLL derivation and the build order are in **`HANDOFF-ALG-SETS.md`**. None of it
+is built. Winter Variation and Summer Variation were explicitly dropped.
+
 ## Verify what you inherit
 
 ```bash
