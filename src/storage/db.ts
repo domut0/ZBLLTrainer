@@ -204,7 +204,13 @@ export async function putAll(
   const progressStore = tx.objectStore('progress')
   const attemptStore = tx.objectStore('attempts')
   for (const p of progress) await progressStore.put(p)
-  // Drop incoming ids so a merge cannot collide with existing rows.
-  for (const a of attempts) await attemptStore.put({ ...a, id: undefined } as AttemptRecord)
+  // Drop incoming ids so an import cannot collide with rows that already
+  // exist. The property has to be absent, not present-and-undefined: the store
+  // auto-increments on the `id` keyPath, and IndexedDB rejects an explicit
+  // undefined as a key rather than generating one.
+  for (const a of attempts) {
+    const { id: _id, ...withoutId } = a
+    await attemptStore.put(withoutId as AttemptRecord)
+  }
   await tx.done
 }
