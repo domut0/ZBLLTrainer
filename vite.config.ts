@@ -1,12 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig(() => {
   const base = process.env.VITE_BASE_PATH || '/'
 
   return {
     base,
+    resolve: {
+      alias: {
+        // data/ holds the build artefacts from scripts/. They are imported, not
+        // fetched, so the service worker precaches them with everything else and
+        // the app is genuinely offline on first install.
+        '@data': fileURLToPath(new URL('./data', import.meta.url)),
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
     plugins: [
       react(),
       VitePWA({
