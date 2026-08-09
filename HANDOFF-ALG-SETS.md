@@ -3,8 +3,32 @@
 Written 2026-08-09, for a fresh agent picking this up cold. Read `HANDOFF.md`
 first (what the app is, how it is built, the traps already handled), then this.
 
-**Nothing in here is built yet.** This document is the research and the plan.
-The nine original issues are all done and shipped; this is new scope.
+**Status, 2026-08-09.** This document is the research and the plan. It was
+written before any of it was built. Since then:
+
+| | State |
+|---|---|
+| Algorithm sets first-class | **Done** — Issue 10 |
+| COLL | **Done** — Issue 11, 40 cases |
+| LXS | **Done** — Issue 12, 116 cases, 265 algorithms |
+| EO | Not started — Issue 13 |
+| ZBLS | Not started — Issue 14 |
+
+Two corrections to what follows, both found by measurement and both the same
+mistake — an over-specified case identity:
+
+- **COLL.** Borrowed algorithms must have their `aufOffset` **re-solved** against
+  the COLL representative, not inherited from the ZBLL case they came from. Five
+  of 472 otherwise produce a reveal that does not solve the cube.
+- **LXS.** A case is the DFR corner plus the DR and FR edges, with the rest of
+  F2L intact. **The last layer is not part of the case.** Identity on the full
+  state still yields the correct 116 count and then discards 140 of the sheet's
+  268 algorithms. EO and ZBLS are also stage sets — expect the same shape of
+  question, and settle it by measurement before writing the importer.
+
+Both were invisible to a passing test suite. `scripts/verify-coll-reveal.mjs`
+and `scripts/verify-lxs-reveal.mjs` check every case/algorithm/AUF combination
+exhaustively; write the equivalent for each new set, and do not sample.
 
 ---
 

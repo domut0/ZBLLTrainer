@@ -30,12 +30,35 @@ schema were kept in-house.
 
 117 tests, `tsc --noEmit` clean, production build clean.
 
-## New scope, not yet started
+## New scope — three of five landed
 
 Support for **COLL, ZBLS, LXS and EO** was requested on 2026-08-09. The source
-CSVs are committed under `data/source/apb/`, and the research, the measured
-COLL derivation and the build order are in **`HANDOFF-ALG-SETS.md`**. None of it
-is built. Winter Variation and Summer Variation were explicitly dropped.
+CSVs are committed under `data/source/apb/`, and the research and build order are
+in **`HANDOFF-ALG-SETS.md`**, which now also records what that plan got wrong.
+Winter Variation and Summer Variation were explicitly dropped.
+
+Broken into Issues 10-15 under `.scratch/zbll-trainer/issues/`. Landed on
+branches `issue-10-alg-sets`, `issue-11-coll`, `issue-12-lxs`, stacked in that
+order and **not yet merged to `main` or pushed**:
+
+| Issue | What | Written by |
+|---|---|---|
+| 10 | Algorithm sets first-class (prefactor) | Claude Code |
+| 11 | COLL — 40 cases derived from ZBLL | `gem` (gemini-3.5-flash-high), amended |
+| 12 | LXS — 116 cases, stage diagram | `gem` (gemini-3.6-flash-high), amended |
+| 13 | EO | not started |
+| 14 | ZBLS | not started |
+| 15 | Bump GitHub Actions to v5 | not started |
+
+628 cases, 1714 algorithms, 153 tests. `npm run data` now runs four scripts: the
+two original verifies plus one per derived set.
+
+**The lesson from 11 and 12, which 13 and 14 will re-pose:** both delegated
+passes shipped an over-specified case identity, and both had a green test suite.
+A case is only the pieces the set actually solves — COLL ignores edge
+permutation, LXS ignores the whole last layer. Settle that by measuring the
+source sheet's own alternatives against each other before writing the importer,
+and verify exhaustively rather than by sampling.
 
 ## Verify what you inherit
 
