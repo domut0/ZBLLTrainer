@@ -109,7 +109,7 @@ describe('validateAlgForCase', () => {
 
   it('rejects an algorithm that solves a different case', () => {
     const a = CASES[0]
-    const other = CASES.find((c) => c.id !== a.id && c.set !== a.set)!
+    const other = CASES.find((c) => c.id !== a.id && c.subset !== a.subset)!
     const result = validateAlgForCase(other.algs[0].alg, a.state)
     expect(result.ok).toBe(false)
   })

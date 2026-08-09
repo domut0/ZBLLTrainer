@@ -215,7 +215,10 @@ for (const [file, setName, expected] of SETS) {
 
     cases.push({
       id: caseId,
-      set: setName,
+      // Every case carries the algorithm set it belongs to. `subset` is the
+      // grouping within that set — for ZBLL, the OLL case it starts from.
+      algSet: "ZBLL",
+      subset: setName,
       group,
       indexInGroup,
       displayName: `${group} #${indexInGroup}`,
@@ -227,7 +230,7 @@ for (const [file, setName, expected] of SETS) {
     });
   }
 
-  const got = cases.filter((c) => c.set === setName).length;
+  const got = cases.filter((c) => c.subset === setName).length;
   console.log(`${setName.padEnd(3)} rows seen ${String(seenInSet).padStart(3)}  imported ${String(got).padStart(3)}  expected ${expected}${got === expected ? "" : "   <-- MISMATCH"}`);
 }
 

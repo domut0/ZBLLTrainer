@@ -1,9 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
-import { CASES } from '@/data'
+import { casesInAlgSet, type AlgSetId } from '@/data'
 import { allAttempts, type AttemptRecord } from '@/storage/db'
 import { statsByCase, formatMs } from '@/stats'
 
-export function StatsView() {
+export interface StatsViewProps {
+  algSet: AlgSetId
+}
+
+export function StatsView({ algSet }: StatsViewProps) {
   const [attempts, setAttempts] = useState<AttemptRecord[]>([])
   const [sortBy, setSortBy] = useState<'case' | 'attempts' | 'median'>('median')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
@@ -18,12 +22,12 @@ export function StatsView() {
   const statsMap = useMemo(() => statsByCase(attempts), [attempts])
 
   const sortedCases = useMemo(() => {
-    const filtered = CASES.filter((c) => {
+    const filtered = casesInAlgSet(algSet).filter((c) => {
       const q = searchQuery.toLowerCase().trim()
       if (!q) return true
       return (
         c.displayName.toLowerCase().includes(q) ||
-        c.set.toLowerCase().includes(q) ||
+        c.subset.toLowerCase().includes(q) ||
         c.group.toLowerCase().includes(q)
       )
     })
@@ -155,7 +159,7 @@ export function StatsView() {
                   {c.displayName}
                 </div>
                 <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide truncate">
-                  {c.set} • {c.group}
+                  {c.subset ? `${c.subset} • ` : ''}{c.group}
                 </div>
               </div>
               <div className="w-24 text-right font-mono text-zinc-400" data-testid="stats-attempts">

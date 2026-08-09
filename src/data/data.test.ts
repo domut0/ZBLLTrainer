@@ -46,11 +46,11 @@ describe('case data', () => {
   // Browse keys its per-group ticked counts by the group label alone. That is
   // only safe while no two sets share a label — otherwise their counts silently
   // merge, which looks like a UI bug and is really a data one.
-  it('never reuses a group label across two sets', () => {
+  it('never reuses a group label across two subsets', () => {
     const setsByGroup = new Map<string, Set<string>>()
     for (const c of CASES) {
       const seen = setsByGroup.get(c.group) ?? new Set<string>()
-      seen.add(c.set)
+      seen.add(c.subset)
       setsByGroup.set(c.group, seen)
     }
     const shared = [...setsByGroup].filter(([, sets]) => sets.size > 1)

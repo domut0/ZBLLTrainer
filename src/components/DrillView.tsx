@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CASES, CASES_BY_ID, SCRAMBLES } from '@/data'
-import type { CaseSet, Scramble, ZbllCase } from '@/data/types'
+import { ALG_SET_BY_ID, CASES_BY_ID, SCRAMBLES, casesInAlgSet, groupsInAlgSet } from '@/data'
+import type { AlgSetId, CaseSubset, Scramble, TrainerCase } from '@/data/types'
 import { LLDiagram } from '@/components/LLDiagram'
 import { revealAlgorithm } from '@/drill/reveal'
 import {
@@ -24,27 +24,69 @@ type Phase =
   | { kind: 'stopped'; ms: number }
 
 interface Served {
-  c: ZbllCase
+  c: TrainerCase
   scramble: Scramble
 }
 
+/**
+ * The pool filter, always read within one algorithm set — the set itself is
+ * chosen above the tab bar, not here. `subset` was called `set` while ZBLL was
+ * the only set; `readFilter` migrates the stored shape.
+ */
 export interface DrillFilter {
-  type: 'all' | 'set' | 'group' | 'slowest'
-  set: CaseSet
+  type: 'all' | 'subset' | 'group' | 'slowest'
+  subset: CaseSubset
   group: string
 }
 
-const DEFAULT_FILTER: DrillFilter = {
-  type: 'all',
-  set: 'T',
-  group: CASES[0].group,
+const FILTER_KEY = 'lock-in-filter'
+
+function defaultFilter(algSet: AlgSetId): DrillFilter {
+  return {
+    type: 'all',
+    subset: ALG_SET_BY_ID.get(algSet)?.subsets[0] ?? '',
+    group: groupsInAlgSet(algSet)[0] ?? '',
+  }
 }
 
-const ALL_GROUPS: string[] = []
-for (const c of CASES) {
-  if (!ALL_GROUPS.includes(c.group)) {
-    ALL_GROUPS.push(c.group)
+/**
+ * Reads the stored filter and makes it valid for the set in hand. A subset or
+ * group that belongs to another set would otherwise silently produce an empty
+ * pool, which reads as "you have ticked nothing" rather than "wrong filter".
+ */
+export function readFilter(raw: string | null, algSet: AlgSetId): DrillFilter {
+  const fallback = defaultFilter(algSet)
+  if (!raw) return fallback
+
+  let parsed: Record<string, unknown>
+  try {
+    const value: unknown = JSON.parse(raw)
+    if (typeof value !== 'object' || value === null) return fallback
+    parsed = value as Record<string, unknown>
+  } catch {
+    return fallback
   }
+
+  // 'set' was this filter's name for what is now a subset.
+  const rawType = parsed.type === 'set' ? 'subset' : parsed.type
+  const type: DrillFilter['type'] =
+    rawType === 'all' || rawType === 'subset' || rawType === 'group' || rawType === 'slowest'
+      ? rawType
+      : 'all'
+
+  const storedSubset = parsed.subset ?? parsed.set
+  const subsets = ALG_SET_BY_ID.get(algSet)?.subsets ?? []
+  const subset =
+    typeof storedSubset === 'string' && subsets.includes(storedSubset)
+      ? storedSubset
+      : fallback.subset
+
+  const group =
+    typeof parsed.group === 'string' && groupsInAlgSet(algSet).includes(parsed.group)
+      ? parsed.group
+      : fallback.group
+
+  return { type, subset, group }
 }
 
 function pick<T>(items: readonly T[]): T | undefined {
@@ -53,19 +95,20 @@ function pick<T>(items: readonly T[]): T | undefined {
 }
 
 function getFilteredPool(
+  algSet: AlgSetId,
   progress: Map<string, ProgressRecord>,
   attempts: AttemptRecord[],
   filter: DrillFilter,
-): ZbllCase[] {
-  const ticked = CASES.filter(
+): TrainerCase[] {
+  const ticked = casesInAlgSet(algSet).filter(
     (c) => progress.get(c.id)?.learned === true && (SCRAMBLES[c.id]?.length ?? 0) > 0,
   )
 
   if (filter.type === 'all') {
     return ticked
   }
-  if (filter.type === 'set') {
-    return ticked.filter((c) => c.set === filter.set)
+  if (filter.type === 'subset') {
+    return ticked.filter((c) => c.subset === filter.subset)
   }
   if (filter.type === 'group') {
     return ticked.filter((c) => c.group === filter.group)
@@ -80,7 +123,7 @@ function getFilteredPool(
   return ticked
 }
 
-function serveFrom(pool: readonly ZbllCase[]): Served | null {
+function serveFrom(pool: readonly TrainerCase[]): Served | null {
   const c = pick(pool)
   if (!c) return null
   const scramble = pick(SCRAMBLES[c.id] ?? [])
@@ -98,19 +141,20 @@ function formatMs(ms: number): string {
 const spokenMs = (ms: number): string => (ms < 60_000 ? `${formatMs(ms)}s` : formatMs(ms))
 
 export interface DrillViewProps {
+  algSet: AlgSetId
   onGoToBrowse?: () => void
 }
 
-export function DrillView({ onGoToBrowse }: DrillViewProps) {
+export function DrillView({ algSet, onGoToBrowse }: DrillViewProps) {
   const [progress, setProgress] = useState<Map<string, ProgressRecord>>(new Map())
   const [attempts, setAttempts] = useState<AttemptRecord[]>([])
-  const [pool, setPool] = useState<ZbllCase[] | null>(null)
+  const [pool, setPool] = useState<TrainerCase[] | null>(null)
   const [served, setServed] = useState<Served | null>(null)
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
   const [elapsed, setElapsed] = useState(0)
   const [note, setNote] = useState<string | null>(null)
 
-  const [filter, setFilter] = useState<DrillFilter>(DEFAULT_FILTER)
+  const [filter, setFilter] = useState<DrillFilter>(() => defaultFilter(algSet))
   const [showFilterPanel, setShowFilterPanel] = useState(false)
 
   const holdTimer = useRef<number | null>(null)
@@ -130,25 +174,10 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
         setProgress(p)
         setAttempts(a)
 
-        const saved = localStorage.getItem('lock-in-filter')
-        let initialFilter = DEFAULT_FILTER
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved)
-            if (parsed && typeof parsed.type === 'string') {
-              initialFilter = {
-                type: parsed.type,
-                set: parsed.set || 'T',
-                group: parsed.group || CASES[0].group,
-              }
-            }
-          } catch {
-            // ignore
-          }
-        }
+        const initialFilter = readFilter(localStorage.getItem(FILTER_KEY), algSet)
         setFilter(initialFilter)
 
-        const nextPool = getFilteredPool(p, a, initialFilter)
+        const nextPool = getFilteredPool(algSet, p, a, initialFilter)
         setPool(nextPool)
         setServed(serveFrom(nextPool))
       })
@@ -159,14 +188,14 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [algSet])
 
   useEffect(() => {
     if (pool !== null) {
-      const nextPool = getFilteredPool(progress, attempts, filter)
+      const nextPool = getFilteredPool(algSet, progress, attempts, filter)
       setPool(nextPool)
     }
-  }, [progress, attempts, filter])
+  }, [algSet, progress, attempts, filter])
 
   useEffect(() => {
     let wakeLock: any = null
@@ -328,17 +357,17 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
   const handleFilterTypeChange = (type: DrillFilter['type']) => {
     const nextFilter = { ...filter, type }
     setFilter(nextFilter)
-    localStorage.setItem('lock-in-filter', JSON.stringify(nextFilter))
-    const nextPool = getFilteredPool(progress, attempts, nextFilter)
+    localStorage.setItem(FILTER_KEY, JSON.stringify(nextFilter))
+    const nextPool = getFilteredPool(algSet, progress, attempts, nextFilter)
     setPool(nextPool)
     setServed(serveFrom(nextPool))
   }
 
-  const handleFilterSetChange = (set: CaseSet) => {
-    const nextFilter = { ...filter, set }
+  const handleFilterSubsetChange = (subset: CaseSubset) => {
+    const nextFilter = { ...filter, subset }
     setFilter(nextFilter)
-    localStorage.setItem('lock-in-filter', JSON.stringify(nextFilter))
-    const nextPool = getFilteredPool(progress, attempts, nextFilter)
+    localStorage.setItem(FILTER_KEY, JSON.stringify(nextFilter))
+    const nextPool = getFilteredPool(algSet, progress, attempts, nextFilter)
     setPool(nextPool)
     setServed(serveFrom(nextPool))
   }
@@ -346,14 +375,21 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
   const handleFilterGroupChange = (group: string) => {
     const nextFilter = { ...filter, group }
     setFilter(nextFilter)
-    localStorage.setItem('lock-in-filter', JSON.stringify(nextFilter))
-    const nextPool = getFilteredPool(progress, attempts, nextFilter)
+    localStorage.setItem(FILTER_KEY, JSON.stringify(nextFilter))
+    const nextPool = getFilteredPool(algSet, progress, attempts, nextFilter)
     setPool(nextPool)
     setServed(serveFrom(nextPool))
   }
 
   const running = phase.kind === 'running'
   const stopped = phase.kind === 'stopped'
+
+  const subsets = ALG_SET_BY_ID.get(algSet)?.subsets ?? []
+  const groups = groupsInAlgSet(algSet)
+  // A set with no subsets of its own has nothing to offer here, so the tab is
+  // dropped rather than shown leading to an empty dropdown.
+  const filterTypes: DrillFilter['type'][] =
+    subsets.length > 0 ? ['all', 'subset', 'group', 'slowest'] : ['all', 'group', 'slowest']
 
   const headerActions = (
     <button
@@ -396,11 +432,11 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
               Pool Filter
             </label>
             <div className="flex bg-zinc-950 p-1 rounded-xl border border-zinc-800/60 w-full h-11">
-              {(['all', 'set', 'group', 'slowest'] as const).map((type) => {
+              {filterTypes.map((type) => {
                 const active = filter.type === type
-                const labels: Record<string, string> = {
+                const labels: Record<DrillFilter['type'], string> = {
                   all: 'All',
-                  set: 'Set',
+                  subset: 'Subset',
                   group: 'Group',
                   slowest: 'Slowest 15',
                 }
@@ -420,20 +456,20 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
             </div>
           </div>
 
-          {filter.type === 'set' && (
+          {filter.type === 'subset' && (
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 block mb-2">
-                Choose Set
+                Choose Subset
               </label>
               <select
-                value={filter.set}
-                onChange={(e) => handleFilterSetChange(e.target.value as CaseSet)}
-                data-testid="filter-set-select"
+                value={filter.subset}
+                onChange={(e) => handleFilterSubsetChange(e.target.value)}
+                data-testid="filter-subset-select"
                 className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm font-semibold text-zinc-100 focus:outline-none focus:border-zinc-700"
               >
-                {(['T', 'U', 'L', 'H', 'Pi', 'S', 'AS'] as CaseSet[]).map((s) => (
+                {subsets.map((s) => (
                   <option key={s} value={s}>
-                    Set {s}
+                    {s}
                   </option>
                 ))}
               </select>
@@ -451,7 +487,7 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
                 data-testid="filter-group-select"
                 className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-sm font-semibold text-zinc-100 focus:outline-none focus:border-zinc-700"
               >
-                {ALL_GROUPS.map((g) => (
+                {groups.map((g) => (
                   <option key={g} value={g}>
                     {g}
                   </option>
@@ -480,7 +516,7 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
               ? 'The drill pool is empty. Go to Browse and tick a case to start drilling it.'
               : filter.type === 'slowest'
                 ? 'No ticked cases have attempts yet to calculate worst medians.'
-                : `No ticked cases found for the chosen ${filter.type === 'set' ? 'Set' : 'Group'}.`}
+                : `No ticked cases found for the chosen ${filter.type === 'subset' ? 'Subset' : 'Group'}.`}
           </p>
           {onGoToBrowse && (
             <button
@@ -556,7 +592,7 @@ export function DrillView({ onGoToBrowse }: DrillViewProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                      Set {served.c.set} • {served.c.group}
+                      {served.c.subset ? `${served.c.subset} • ` : ''}{served.c.group}
                     </div>
                     <h2
                       className="text-xl font-extrabold text-zinc-100 tracking-tight truncate"

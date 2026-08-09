@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ZbllCase } from '@/data/types'
+import type { TrainerCase } from '@/data/types'
 import { LLDiagram } from '@/components/LLDiagram'
 import {
   setCustomAlg,
@@ -11,7 +11,7 @@ import {
 import { validateAlgForCase } from '@/cube/apply'
 
 interface CaseDetailProps {
-  c: ZbllCase
+  c: TrainerCase
   progress: ProgressRecord
   onProgressChange: (next: ProgressRecord) => void
   onBack: () => void
@@ -91,7 +91,7 @@ export function CaseDetail({ c, progress, onProgressChange, onBack }: CaseDetail
       {/* Header Info */}
       <div className="text-center mt-2">
         <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-          Set {c.set} • {c.group}
+          {c.subset ? `${c.subset} • ` : ''}{c.group}
         </span>
         <h2 className="text-3xl font-extrabold text-zinc-100 tracking-tight mt-1">
           {c.displayName}

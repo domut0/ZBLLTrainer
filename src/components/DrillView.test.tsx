@@ -102,13 +102,13 @@ describe('DrillView', () => {
   })
 
   it('serves the scramble it selected', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     const el = await screen.findByTestId('drill-scramble')
     expect(el).toHaveTextContent(served.scramble)
   })
 
   it('reveals the algorithm AUF-corrected for the served AUF', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     await runOneAttempt()
 
@@ -127,7 +127,7 @@ describe('DrillView', () => {
   })
 
   it('honours the chosen algorithm, not just the first one', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     await runOneAttempt()
 
@@ -138,7 +138,7 @@ describe('DrillView', () => {
   })
 
   it('draws the diagram at the served AUF, not at facelets[0]', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     await runOneAttempt()
 
@@ -152,7 +152,7 @@ describe('DrillView', () => {
   })
 
   it('records the attempt with the case id and the served AUF', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     await runOneAttempt()
 
@@ -165,7 +165,7 @@ describe('DrillView', () => {
   })
 
   it('shows the case name and the time on the reveal', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     await runOneAttempt()
 
@@ -174,7 +174,7 @@ describe('DrillView', () => {
   })
 
   it('does not start the timer when the hold is released too early', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
 
     const timer = screen.getByTestId('drill-timer')
@@ -188,7 +188,7 @@ describe('DrillView', () => {
   })
 
   it('serves another scramble after the reveal', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     await runOneAttempt()
 
@@ -211,7 +211,7 @@ describe('DrillView', () => {
       auf: servedAuf,
     })
 
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
 
@@ -222,7 +222,7 @@ describe('DrillView', () => {
   })
 
   it('says so when there is nothing to discard', async () => {
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     await screen.findByTestId('drill-scramble')
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
 
@@ -233,7 +233,7 @@ describe('DrillView', () => {
     mockAllProgress.mockResolvedValue(new Map())
     const onGoToBrowse = vi.fn()
 
-    render(<DrillView onGoToBrowse={onGoToBrowse} />)
+    render(<DrillView algSet="ZBLL" onGoToBrowse={onGoToBrowse} />)
 
     expect(await screen.findByText('Nothing to drill yet')).toBeInTheDocument()
     expect(screen.getByText(/tick a case/i)).toBeInTheDocument()
@@ -249,7 +249,7 @@ describe('DrillView', () => {
       new Map([[testCase.id, { ...learnedProgress, learned: false }]]),
     )
 
-    render(<DrillView />)
+    render(<DrillView algSet="ZBLL" />)
     expect(await screen.findByText('Nothing to drill yet')).toBeInTheDocument()
   })
 })

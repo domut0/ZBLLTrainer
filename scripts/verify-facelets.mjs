@@ -150,20 +150,20 @@ const antiSuneSig = twistSignature(llFacelets(SOLVED.applyAlg(new Alg("R U2 R' U
 if (suneSig === antiSuneSig) report("chirality", "Sune and Anti-Sune have the same signature; the check is vacuous");
 
 for (const c of cases) {
-  const expectedOriented = ORIENTED_CORNERS[c.set];
+  const expectedOriented = ORIENTED_CORNERS[c.subset];
   const signatures = new Set();
   for (const f of c.facelets) {
     const oriented = [0, 2, 6, 8].filter((i) => f[i] === Y).length;
     if (oriented !== expectedOriented) {
-      report(c.displayName, `${oriented} oriented corners, expected ${expectedOriented} for set ${c.set}`);
+      report(c.displayName, `${oriented} oriented corners, expected ${expectedOriented} for subset ${c.subset}`);
     }
     signatures.add(twistSignature(f));
   }
   // Turning the top layer cannot change how a corner is twisted.
   if (signatures.size !== 1) report(c.displayName, `twist signature varies across AUFs: ${[...signatures].join(" ")}`);
   const sig = [...signatures][0];
-  if (c.set === "S" && sig !== suneSig) report(c.displayName, `set S but signature ${sig}, not Sune's ${suneSig}`);
-  if (c.set === "AS" && sig !== antiSuneSig) report(c.displayName, `set AS but signature ${sig}, not Anti-Sune's ${antiSuneSig}`);
+  if (c.subset === "S" && sig !== suneSig) report(c.displayName, `subset S but signature ${sig}, not Sune's ${suneSig}`);
+  if (c.subset === "AS" && sig !== antiSuneSig) report(c.displayName, `subset AS but signature ${sig}, not Anti-Sune's ${antiSuneSig}`);
 }
 
 // ---------------------------------------------------------------------------

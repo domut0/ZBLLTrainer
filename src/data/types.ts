@@ -1,7 +1,32 @@
 // Mirrors data/SCHEMA.md. That file is the contract; this is its TypeScript
 // face. If they ever disagree, SCHEMA.md is right.
 
-export type CaseSet = 'T' | 'U' | 'L' | 'H' | 'Pi' | 'S' | 'AS'
+/**
+ * An algorithm set: a body of cases with its own source data, its own validity
+ * rule and its own diagram style. Not to be confused with a *subset*, which is
+ * a grouping within one set.
+ *
+ * The union names every set the app is planned to support. Only the sets in
+ * `ALG_SETS` (src/data/algSets.ts) actually exist; that registry, not this
+ * type, is what the UI enumerates.
+ */
+export type AlgSetId = 'ZBLL' | 'COLL' | 'LXS' | 'EO' | 'ZBLS'
+
+/**
+ * The seven ZBLL subsets, named for the OLL case they start from. These are
+ * subsets *within* ZBLL — they were called `CaseSet` back when ZBLL was the
+ * only set and the distinction did not exist.
+ */
+export type ZbllSubset = 'T' | 'U' | 'L' | 'H' | 'Pi' | 'S' | 'AS'
+
+export const ZBLL_SUBSETS: readonly ZbllSubset[] = ['T', 'U', 'L', 'H', 'Pi', 'S', 'AS']
+
+/**
+ * A case's subset label. Typed as a plain string rather than a union because
+ * every set has its own vocabulary, and a set may have none — in which case
+ * this is the empty string. `ALG_SETS[n].subsets` is the enumerable list.
+ */
+export type CaseSubset = string
 
 /** 0-3, a number of quarter-turns of the top layer. */
 export type Auf = 0 | 1 | 2 | 3
@@ -37,10 +62,13 @@ export interface CaseAlg {
   aufOffset: Auf
 }
 
-export interface ZbllCase {
-  /** Canonical, derived from the last-layer state. Stable across re-imports. */
+export interface TrainerCase {
+  /** Canonical, derived from the cube state. Stable across re-imports. */
   id: string
-  set: CaseSet
+  /** Which algorithm set this case belongs to. */
+  algSet: AlgSetId
+  /** Subset within that set, e.g. `"Pi"` for ZBLL. Empty if the set has none. */
+  subset: CaseSubset
   /** Group label exactly as written in the source sheet, e.g. "Pi3: Lines". */
   group: string
   indexInGroup: number

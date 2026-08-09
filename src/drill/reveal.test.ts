@@ -43,8 +43,8 @@ const acrossAufs = (caseId: string) => {
 }
 
 describe('revealAlgorithm', () => {
-  it('covers every set in the sample', () => {
-    expect(new Set(sample.map((c) => c.set)).size).toBe(7)
+  it('covers every subset in the sample', () => {
+    expect(new Set(sample.map((c) => c.subset)).size).toBe(7)
   })
 
   it('exercises all four AUFs, not just the uncorrected one', () => {

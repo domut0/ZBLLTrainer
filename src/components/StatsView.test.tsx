@@ -23,7 +23,7 @@ describe('StatsView', () => {
       { id: 1, caseId: CASES[1].id, ms: 3000, at: Date.now(), auf: 0 },
     ]
 
-    render(<StatsView />)
+    render(<StatsView algSet="ZBLL" />)
 
     await waitFor(() => {
       expect(screen.getByText(CASES[0].displayName)).toBeInTheDocument()
@@ -61,7 +61,7 @@ describe('StatsView', () => {
       { id: 2, caseId: CASES[1].id, ms: 5000, at: Date.now(), auf: 0 },
     ]
 
-    render(<StatsView />)
+    render(<StatsView algSet="ZBLL" />)
 
     await waitFor(() => {
       expect(screen.getByText(CASES[0].displayName)).toBeInTheDocument()

@@ -1,23 +1,52 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { CASES, type CaseSet } from '@/data'
+import {
+  ALG_SET_BY_ID,
+  casesInAlgSet,
+  casesInSubset,
+  groupsInSubset,
+  type AlgSetId,
+  type CaseSubset,
+  type TrainerCase,
+} from '@/data'
 import { allProgress, toggleLearned, DEFAULT_PROGRESS, type ProgressRecord } from '@/storage/db'
 import { LLDiagram } from '@/components/LLDiagram'
 import { CaseDetail } from '@/components/CaseDetail'
 
+/**
+ * Browse is scoped to one algorithm set, chosen above the tab bar. Within a set
+ * it descends subsets → groups → cases → detail. A set with no subsets of its
+ * own starts at groups instead, so the user is never shown a list of one.
+ */
 type NavState =
-  | { type: 'sets' }
-  | { type: 'groups'; set: CaseSet }
-  | { type: 'cases'; set: CaseSet; group: string }
-  | { type: 'detail'; set: CaseSet; group: string; caseId: string }
+  | { type: 'subsets' }
+  | { type: 'groups'; subset: CaseSubset }
+  | { type: 'cases'; subset: CaseSubset; group: string }
+  | { type: 'detail'; subset: CaseSubset; group: string; caseId: string }
 
 type FilterMode = 'all' | 'ticked' | 'unticked'
 
-export function BrowseView() {
-  const [nav, setNav] = useState<NavState>({ type: 'sets' })
+export interface BrowseViewProps {
+  algSet: AlgSetId
+}
+
+export function BrowseView({ algSet }: BrowseViewProps) {
+  const def = ALG_SET_BY_ID.get(algSet)
+  const subsets = def?.subsets ?? []
+  const hasSubsets = subsets.length > 0
+
+  const rootNav: NavState = hasSubsets ? { type: 'subsets' } : { type: 'groups', subset: '' }
+
+  const [nav, setNav] = useState<NavState>(rootNav)
   const [progress, setProgress] = useState<Map<string, ProgressRecord>>(new Map())
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
 
   const mainRef = useRef<HTMLDivElement>(null)
+
+  // Switching sets mid-browse would otherwise leave the nav pointing at a
+  // subset the new set does not have.
+  useEffect(() => {
+    setNav(hasSubsets ? { type: 'subsets' } : { type: 'groups', subset: '' })
+  }, [algSet, hasSubsets])
 
   // Scroll to top when view changes
   useEffect(() => {
@@ -52,76 +81,54 @@ export function BrowseView() {
     }
   }
 
-  // Calculate ticked and total counts per set, per group, and overall
+  // Ticked and total counts per subset, per group, and across the whole set.
   const stats = useMemo(() => {
-    const setCounts: Record<CaseSet, { total: number; ticked: number }> = {
-      T: { total: 0, ticked: 0 },
-      U: { total: 0, ticked: 0 },
-      L: { total: 0, ticked: 0 },
-      H: { total: 0, ticked: 0 },
-      Pi: { total: 0, ticked: 0 },
-      S: { total: 0, ticked: 0 },
-      AS: { total: 0, ticked: 0 },
-    }
+    const subsetCounts: Record<string, { total: number; ticked: number }> = {}
+    for (const s of subsets) subsetCounts[s] = { total: 0, ticked: 0 }
 
     const groupCounts: Record<string, { total: number; ticked: number }> = {}
 
     let totalTotal = 0
     let totalTicked = 0
 
-    for (const c of CASES) {
+    for (const c of casesInAlgSet(algSet)) {
       const isTicked = !!progress.get(c.id)?.learned
 
-      // Update Set counts
-      setCounts[c.set].total++
-      if (isTicked) {
-        setCounts[c.set].ticked++
-      }
+      subsetCounts[c.subset] ??= { total: 0, ticked: 0 }
+      subsetCounts[c.subset].total++
+      if (isTicked) subsetCounts[c.subset].ticked++
 
-      // Update Group counts
-      if (!groupCounts[c.group]) {
-        groupCounts[c.group] = { total: 0, ticked: 0 }
-      }
+      groupCounts[c.group] ??= { total: 0, ticked: 0 }
       groupCounts[c.group].total++
-      if (isTicked) {
-        groupCounts[c.group].ticked++
-      }
+      if (isTicked) groupCounts[c.group].ticked++
 
-      // Update Overall counts
       totalTotal++
-      if (isTicked) {
-        totalTicked++
-      }
+      if (isTicked) totalTicked++
     }
 
-    return { setCounts, groupCounts, totalTotal, totalTicked }
-  }, [progress])
+    return { subsetCounts, groupCounts, totalTotal, totalTicked }
+  }, [progress, algSet, subsets])
 
-  // Get ordered group list for a set, preserving order in CASES (source spreadsheet order)
-  const groupsInSet = useMemo(() => {
-    if (nav.type === 'sets') return []
-    const setCases = CASES.filter((c) => c.set === nav.set)
-    const uniqueGroups: string[] = []
-    for (const c of setCases) {
-      if (!uniqueGroups.includes(c.group)) {
-        uniqueGroups.push(c.group)
-      }
-    }
-    return uniqueGroups
-  }, [nav])
+  // Group list for the current subset, in source-sheet order.
+  const groups = useMemo(
+    () => (nav.type === 'subsets' ? [] : groupsInSubset(algSet, nav.subset)),
+    [algSet, nav],
+  )
+
+  const setLabel = def?.label ?? algSet
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-50 select-none">
       {/* Top Header */}
       <header className="flex-none h-14 border-b border-zinc-900 flex items-center justify-between px-4 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10">
         <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
-          {nav.type === 'sets' && 'Lock In ZBLL'}
-          {nav.type === 'groups' && `Set ${nav.set}`}
+          {nav.type === 'subsets' && `Lock In ${setLabel}`}
+          {nav.type === 'groups' && (nav.subset ? `${setLabel} ${nav.subset}` : setLabel)}
           {nav.type === 'cases' && nav.group}
           {nav.type === 'detail' && nav.group}
         </h1>
         <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-900/50 px-2.5 py-1 rounded-lg border border-zinc-800/40">
-          {nav.type === 'sets' && 'Sets'}
+          {nav.type === 'subsets' && 'Subsets'}
           {nav.type === 'groups' && 'Groups'}
           {nav.type === 'cases' && 'Grid'}
           {nav.type === 'detail' && 'Detail'}
@@ -130,24 +137,27 @@ export function BrowseView() {
 
       {/* Main Content Area */}
       <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-6">
-        {nav.type === 'sets' && (
+        {nav.type === 'subsets' && (
           <div className="grid grid-cols-2 gap-4">
-            {(['T', 'U', 'L', 'H', 'Pi', 'S', 'AS'] as CaseSet[]).map((set) => {
-              const count = stats.setCounts[set]
+            {subsets.map((subset, i) => {
+              const count = stats.subsetCounts[subset] ?? { total: 0, ticked: 0 }
               const percent = count.total > 0 ? (count.ticked / count.total) * 100 : 0
-              const isLast = set === 'AS'
+              // An odd count leaves a gap; the last tile spans it.
+              const isLast = i === subsets.length - 1 && subsets.length % 2 === 1
 
               return (
                 <button
-                  key={set}
-                  onClick={() => setNav({ type: 'groups', set })}
+                  key={subset}
+                  onClick={() => setNav({ type: 'groups', subset })}
                   className={`flex flex-col justify-between p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 active:scale-95 transition-all text-left min-h-[110px] ${
                     isLast ? 'col-span-2' : ''
                   }`}
-                  aria-label={`Set ${set}, ${count.ticked} of ${count.total} cases learned`}
+                  aria-label={`Subset ${subset}, ${count.ticked} of ${count.total} cases learned`}
                 >
                   <div className="flex justify-between items-start w-full">
-                    <span className="text-3xl font-extrabold tracking-tight text-zinc-100">{set}</span>
+                    <span className="text-3xl font-extrabold tracking-tight text-zinc-100">
+                      {subset}
+                    </span>
                     <span className="text-xs font-semibold text-zinc-400 bg-zinc-900/80 px-2 py-1 rounded-lg border border-zinc-800">
                       {count.ticked}/{count.total}
                     </span>
@@ -168,14 +178,14 @@ export function BrowseView() {
 
         {nav.type === 'groups' && (
           <div className="flex flex-col gap-3">
-            {groupsInSet.map((group) => {
+            {groups.map((group) => {
               const count = stats.groupCounts[group] || { total: 0, ticked: 0 }
               const percent = count.total > 0 ? (count.ticked / count.total) * 100 : 0
 
               return (
                 <button
                   key={group}
-                  onClick={() => setNav({ type: 'cases', set: nav.set, group })}
+                  onClick={() => setNav({ type: 'cases', subset: nav.subset, group })}
                   className="flex flex-col p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 active:scale-[0.99] transition-all text-left"
                   aria-label={`Group ${group}, ${count.ticked} of ${count.total} cases learned`}
                 >
@@ -201,34 +211,38 @@ export function BrowseView() {
 
         {nav.type === 'cases' && (
           <CaseGrid
-            set={nav.set}
+            algSet={algSet}
+            subset={nav.subset}
             group={nav.group}
             progress={progress}
             filterMode={filterMode}
             onToggleLearned={handleToggleLearned}
-            onOpenDetail={(caseId) => setNav({ type: 'detail', set: nav.set, group: nav.group, caseId })}
+            onOpenDetail={(caseId) =>
+              setNav({ type: 'detail', subset: nav.subset, group: nav.group, caseId })
+            }
           />
         )}
 
-        {nav.type === 'detail' && (() => {
-          const c = CASES.find((x) => x.id === nav.caseId)
-          if (!c) return null
-          const p = progress.get(nav.caseId) || DEFAULT_PROGRESS(nav.caseId)
-          return (
-            <CaseDetail
-              c={c}
-              progress={p}
-              onProgressChange={(nextRecord) => {
-                setProgress((prev) => {
-                  const next = new Map(prev)
-                  next.set(nav.caseId, nextRecord)
-                  return next
-                })
-              }}
-              onBack={() => setNav({ type: 'cases', set: nav.set, group: nav.group })}
-            />
-          )
-        })()}
+        {nav.type === 'detail' &&
+          (() => {
+            const c = casesInAlgSet(algSet).find((x) => x.id === nav.caseId)
+            if (!c) return null
+            const p = progress.get(nav.caseId) || DEFAULT_PROGRESS(nav.caseId)
+            return (
+              <CaseDetail
+                c={c}
+                progress={p}
+                onProgressChange={(nextRecord) => {
+                  setProgress((prev) => {
+                    const next = new Map(prev)
+                    next.set(nav.caseId, nextRecord)
+                    return next
+                  })
+                }}
+                onBack={() => setNav({ type: 'cases', subset: nav.subset, group: nav.group })}
+              />
+            )
+          })()}
       </main>
 
       {/* Bottom Sticky Control Panel */}
@@ -254,15 +268,15 @@ export function BrowseView() {
           </div>
         )}
 
-        {nav.type !== 'sets' && (
+        {nav.type !== rootNav.type && (
           <button
             onClick={() => {
               if (nav.type === 'detail') {
-                setNav({ type: 'cases', set: nav.set, group: nav.group })
+                setNav({ type: 'cases', subset: nav.subset, group: nav.group })
               } else if (nav.type === 'cases') {
-                setNav({ type: 'groups', set: nav.set })
+                setNav({ type: 'groups', subset: nav.subset })
               } else if (nav.type === 'groups') {
-                setNav({ type: 'sets' })
+                setNav({ type: 'subsets' })
               }
             }}
             className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-200 active:scale-[0.98] transition-all"
@@ -270,11 +284,11 @@ export function BrowseView() {
             <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
-            Back to {nav.type === 'detail' ? 'Grid' : nav.type === 'cases' ? 'Groups' : 'Sets'}
+            Back to {nav.type === 'detail' ? 'Grid' : nav.type === 'cases' ? 'Groups' : 'Subsets'}
           </button>
         )}
 
-        {nav.type === 'sets' && (
+        {nav.type === rootNav.type && (
           <div className="flex flex-col gap-1 text-center py-1">
             <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
               Overall Progress
@@ -286,7 +300,9 @@ export function BrowseView() {
               <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/40">
                 <div
                   className="h-full bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 rounded-full transition-all duration-300"
-                  style={{ width: `${stats.totalTotal > 0 ? (stats.totalTicked / stats.totalTotal) * 100 : 0}%` }}
+                  style={{
+                    width: `${stats.totalTotal > 0 ? (stats.totalTicked / stats.totalTotal) * 100 : 0}%`,
+                  }}
                 />
               </div>
             </div>
@@ -298,7 +314,8 @@ export function BrowseView() {
 }
 
 interface CaseGridProps {
-  set: CaseSet
+  algSet: AlgSetId
+  subset: CaseSubset
   group: string
   progress: Map<string, ProgressRecord>
   filterMode: FilterMode
@@ -306,11 +323,19 @@ interface CaseGridProps {
   onOpenDetail: (caseId: string) => void
 }
 
-function CaseGrid({ set, group, progress, filterMode, onToggleLearned, onOpenDetail }: CaseGridProps) {
-  // Filter cases in the selected group
-  const casesInGroup = useMemo(() => {
-    return CASES.filter((c) => c.set === set && c.group === group)
-  }, [set, group])
+function CaseGrid({
+  algSet,
+  subset,
+  group,
+  progress,
+  filterMode,
+  onToggleLearned,
+  onOpenDetail,
+}: CaseGridProps) {
+  const casesInGroup: readonly TrainerCase[] = useMemo(
+    () => casesInSubset(algSet, subset).filter((c) => c.group === group),
+    [algSet, subset, group],
+  )
 
   const visibleCases = useMemo(() => {
     return casesInGroup.filter((c) => {

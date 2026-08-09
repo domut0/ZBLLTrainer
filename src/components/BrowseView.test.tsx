@@ -30,7 +30,7 @@ describe('BrowseView', () => {
   })
 
   it('renders the sets list initially', async () => {
-    render(<BrowseView />)
+    render(<BrowseView algSet="ZBLL" />)
 
     // Wait for the data to load and render header
     await waitFor(() => {
@@ -44,7 +44,7 @@ describe('BrowseView', () => {
   })
 
   it('updates the ticked count when a case is toggled', async () => {
-    render(<BrowseView />)
+    render(<BrowseView algSet="ZBLL" />)
 
     // Wait for load
     await screen.findByText('Lock In ZBLL')
@@ -53,14 +53,14 @@ describe('BrowseView', () => {
     const setTBtn = screen.getByRole('button', { name: /Set T/i })
     expect(setTBtn).toBeInTheDocument()
 
-    // Every set except H holds 72 cases.
+    // Every ZBLL subset except H holds 72 cases.
     const totalSetT = 72
 
-    // Click Set T to go to groups
+    // Click subset T to go to groups
     fireEvent.click(setTBtn)
 
-    // Expect group screen with "Set T" header
-    expect(await screen.findByText('Set T')).toBeInTheDocument()
+    // The groups screen names the set and the subset it is inside.
+    expect(await screen.findByText('ZBLL T')).toBeInTheDocument()
 
     // Find first group button
     const groupButtons = screen.getAllByLabelText(/Group .*, \d+ of \d+ cases learned/i)
@@ -97,14 +97,14 @@ describe('BrowseView', () => {
     fireEvent.click(backToGroupsBtn)
 
     // Wait for groups list to render
-    expect(await screen.findByText('Set T')).toBeInTheDocument()
+    expect(await screen.findByText('ZBLL T')).toBeInTheDocument()
 
     // The group count should now show "1 of <total>"
     const updatedGroupBtn = screen.getAllByLabelText(new RegExp(`Group ${groupName}, 1 of ${totalGroupCases} cases learned`, 'i'))[0]
     expect(updatedGroupBtn).toBeInTheDocument()
 
     // Go back to Sets and check ticked count
-    const backToSetsBtn = screen.getByRole('button', { name: /Back to Sets/i })
+    const backToSetsBtn = screen.getByRole('button', { name: /Back to Subsets/i })
     fireEvent.click(backToSetsBtn)
 
     // Wait for sets list
@@ -116,7 +116,7 @@ describe('BrowseView', () => {
   })
 
   it('filters the visible set of cases when selecting different filter modes', async () => {
-    render(<BrowseView />)
+    render(<BrowseView algSet="ZBLL" />)
 
     // Wait for load
     await screen.findByText('Lock In ZBLL')

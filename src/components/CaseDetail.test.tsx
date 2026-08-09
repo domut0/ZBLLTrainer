@@ -47,7 +47,7 @@ describe('CaseDetail', () => {
     )
 
     // Check header details are rendered
-    expect(screen.getByText(`Set ${testCase.set} • ${testCase.group}`)).toBeInTheDocument()
+    expect(screen.getByText(`${testCase.subset} • ${testCase.group}`)).toBeInTheDocument()
     expect(screen.getByText(testCase.displayName)).toBeInTheDocument()
 
     // Check active algorithm is displayed

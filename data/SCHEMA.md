@@ -3,6 +3,26 @@
 Frozen ahead of the importer so dependent work can start. Issue 02 must produce
 exactly this; Issues 03, 06 and 07 may rely on it.
 
+**Amended 2026-08-08 (Issue 10)** — a case now names the *algorithm set* it
+belongs to. `set` became two fields, `algSet` and `subset`, because the word was
+doing two jobs: naming ZBLL's seven OLL-derived groupings while ZBLL itself went
+unnamed. Nothing else moved, and no case id changed — ids derive from the cube
+state, and `src/data/algSets.test.ts` asserts all 472 against a fixture captured
+before the change.
+
+What varies per algorithm set, and therefore must not be assumed anywhere:
+
+| | Varies how |
+|---|---|
+| **Validity rule** | ZBLL requires F2L intact and all LL edges oriented. The F2L-stage sets do not. `legality()` in the importer becomes one predicate per set (Issue 12). |
+| **Diagram representation** | ZBLL and COLL are last-layer only, the 21-sticker string below. Stage sets need the LL plus the FR/DR slot, and EO needs orientation shown as something other than colour. `AlgSetDef.diagram` selects. |
+| **Subset vocabulary** | ZBLL has seven; another set may have its own, or none. `AlgSetDef.subsets` is the enumerable list; `subset` is `""` for a set without them. |
+| **AUF/rotation canonicalisation** | ZBLL is free to rotate. Stage sets must keep the slot in a fixed place, so whole-cube `y` must not be canonicalised away. |
+
+The registry lives in `src/data/algSets.ts`. `AlgSetId` names every planned set;
+`ALG_SETS` holds the ones that exist, and the UI enumerates that array, never
+the type.
+
 **Amended 2026-08-08** — added `facelets` to `ZbllCase`. Issue 03 originally had
 the diagram component derive sticker colours from the orbit arrays below. That is
 error-prone 3D geometry whose failure mode is 472 plausible-looking wrong
@@ -13,7 +33,11 @@ still the identity and is still what the scramble precompute works from.
 ## `data/cases.json`
 
 ```ts
-type CaseSet = "T" | "U" | "L" | "H" | "Pi" | "S" | "AS";
+/** Every planned algorithm set. Only those in `ALG_SETS` exist today. */
+type AlgSetId = "ZBLL" | "COLL" | "LXS" | "EO" | "ZBLS";
+
+/** The seven ZBLL subsets — groupings *within* ZBLL, named for their OLL case. */
+type ZbllSubset = "T" | "U" | "L" | "H" | "Pi" | "S" | "AS";
 
 /**
  * A cube state, in the orbit layout cubing.js uses for 3x3x3.
@@ -42,10 +66,13 @@ interface CaseAlg {
   aufOffset: 0 | 1 | 2 | 3;
 }
 
-interface ZbllCase {
+interface TrainerCase {
   /** Canonical, stable across re-imports. Derived from the state, not the sheet. */
   id: string;
-  set: CaseSet;
+  /** Which algorithm set this case belongs to. */
+  algSet: AlgSetId;
+  /** Grouping within that set — a `ZbllSubset` for ZBLL. "" if the set has none. */
+  subset: string;
   /** Group label exactly as written in the sheet, e.g. "Pi3: Lines". */
   group: string;
   /** 1-based position within the group. */
@@ -64,7 +91,7 @@ interface ZbllCase {
   algs: CaseAlg[];
 }
 
-type CasesFile = ZbllCase[]; // exactly 472 entries
+type CasesFile = TrainerCase[]; // exactly 472 entries, all ZBLL
 ```
 
 ### `FaceletString`
@@ -107,8 +134,9 @@ case and every AUF, and are checked in `scripts/verify-facelets.mjs`:
 - all 472 `facelets[0]` values are distinct, because the 21 stickers determine
   the last-layer state completely
 
-Counts: 72 each for `T`, `U`, `L`, `Pi`, `S`, `AS`; 40 for `H`. The H sheet's
-header says 0/72 — that is a copy-paste artifact in the source, not a target.
+Counts, per ZBLL subset: 72 each for `T`, `U`, `L`, `Pi`, `S`, `AS`; 40 for `H`.
+The H sheet's header says 0/72 — that is a copy-paste artifact in the source,
+not a target.
 
 ## `data/scrambles.json`
 
