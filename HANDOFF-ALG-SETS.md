@@ -11,8 +11,8 @@ written before any of it was built. Since then:
 | Algorithm sets first-class | **Done** — Issue 10 |
 | COLL | **Done** — Issue 11, 40 cases |
 | LXS | **Done** — Issue 12, 116 cases, 265 algorithms |
-| EO | Not started — Issue 13 |
-| ZBLS | Not started — Issue 14 |
+| EO | **Done** — Issue 13, 11 cases, 33 algorithms |
+| ZBLS | **Done** — Issue 14, 302 cases, 339 algorithms |
 
 Two corrections to what follows, both found by measurement and both the same
 mistake — an over-specified case identity:

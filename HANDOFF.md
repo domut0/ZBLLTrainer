@@ -46,19 +46,53 @@ order and **not yet merged to `main` or pushed**:
 | 10 | Algorithm sets first-class (prefactor) | Claude Code |
 | 11 | COLL — 40 cases derived from ZBLL | `gem` (gemini-3.5-flash-high), amended |
 | 12 | LXS — 116 cases, stage diagram | `gem` (gemini-3.6-flash-high), amended |
-| 13 | EO | not started |
-| 14 | ZBLS | not started |
-| 15 | Bump GitHub Actions to v5 | not started |
+| 13 | EO — 11 cases, orientation markers | `gem` (gemini-3.6-flash-high), amended |
+| 14 | ZBLS — 302 cases | `gem` (gemini-3.6-flash-high), amended |
+| 15 | GitHub Actions bumped to current majors | Claude Code, own branch off `main` |
 
-628 cases, 1714 algorithms, 153 tests. `npm run data` now runs four scripts: the
-two original verifies plus one per derived set.
+**All five sets are built.** 941 cases, 2086 algorithms, 165 tests. `npm run data`
+runs six scripts: the two original verifies plus one reveal check per derived set,
+all exhaustive rather than sampled.
 
-**The lesson from 11 and 12, which 13 and 14 will re-pose:** both delegated
-passes shipped an over-specified case identity, and both had a green test suite.
-A case is only the pieces the set actually solves — COLL ignores edge
-permutation, LXS ignores the whole last layer. Settle that by measuring the
-source sheet's own alternatives against each other before writing the importer,
-and verify exhaustively rather than by sampling.
+Branches, stacked in order and none pushed: `issue-13-eo` carries 10-13,
+`issue-14-zbls` is merged into it, and `issue-15-actions-v5` sits independently
+off `main`. Issue 15's remaining criterion — that the workflow runs green — needs
+a push, which deploys.
+
+Two things worth knowing before the next change:
+
+- **The bundle is now 2.5 MB, 370 kB gzipped**, up from 1.4 MB / 212 kB, and all
+  of it is precached on first load. `data/scrambles.json` is 1.8 MB of that:
+  18,820 scrambles, 20 per case. `vite.config.ts` had to raise workbox's
+  `maximumFileSizeToCacheInBytes` past its 2 MiB default or the chunk is silently
+  dropped from the precache and offline stops working. Cutting scrambles per case
+  is the obvious lever if that matters.
+- **`scripts/precompute-scrambles.mjs` is not part of `npm run data`.** Run it
+  yourself after any import change, or new cases ship with no scrambles. Its cache
+  re-checks that each cached scramble still lands on its case, so it is safe to
+  re-run and only re-solves what actually changed.
+
+**The lesson, now confirmed across all four derived sets.** A case is only the
+pieces the set actually solves: COLL ignores edge permutation, LXS and ZBLS ignore
+most of the last layer, EO is nothing but edge orientation. Every delegated pass
+that was left to infer this over-specified it, and every one still produced the
+right case count while silently discarding most of the sheet's alternatives.
+
+| Set | Alternatives kept, correct identity | Kept under full-state identity |
+|---|---|---|
+| COLL | 472 | 5 reveals silently wrong |
+| LXS | 265 of 268 | 126 |
+| EO | 33 of 34 | 12 of 34 |
+| ZBLS | 339 of 339 | ~305 |
+
+Measure the sheet's own alternatives against each other **before** writing the
+importer — it takes ten minutes and converts an ambiguous defect into a spec.
+Then verify exhaustively. Sampling hid the COLL defect, and `verify-scrambles.mjs`
+was itself randomised until Issue 14.
+
+And orientation is never a colour. Both EO and ZBLS needed explicit markers
+derived from `EDGES.orientation`; the colour shortcut was tried in ZBLS and was
+wrong on 480 of 1208 diagrams.
 
 ## Verify what you inherit
 
