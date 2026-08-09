@@ -22,7 +22,7 @@ Source data is the user's own spreadsheet, imported at build time.
 |---|---|---|
 | 01 | Installable app shell | **Done**, merged. Written by `gem`, verified by Claude |
 | 02 | Case importer | **Done**, merged. 472/472, 472 unique ids, 0 rejects |
-| 03 | LL diagram renderer | **Was running** in a Claude Sonnet subagent when the session ended. Check `git log issue-03-ll-diagram` — it may or may not have landed |
+| 03 | LL diagram renderer | **In progress** in a Claude Sonnet subagent. As of 2026-08-08 the branch is still at `7ce28a1` with only an untracked `scripts/derive-tmp.mjs` in the worktree. Leave `C:\dev\ZBLLTrainer-03` alone until it lands |
 | 06 | Scramble precompute | **Done**, merged. 9440 scrambles, independently verified |
 | 04, 05, 07, 08, 09 | Browse/tick, case detail, drill loop, stats, durability | **Not started** |
 
@@ -105,15 +105,40 @@ From their global `CLAUDE.md`, and they care about these:
   writing an equivalent for anything else delegated.
 - They want gemini and Claude subagents used in roughly equal measure.
 
-## Blocked on the user
+## Hosting — no longer blocked
 
-`gh` is not authenticated, so nothing is pushed and Pages is not enabled. A
-phone-first PWA is unusable until it has an HTTPS URL. The user must run
-`gh auth login` themselves — do not handle their credentials.
+Resolved 2026-08-08. `gh` is authenticated as `domut0` (scopes `gist`, `read:org`,
+`repo`, `workflow`). The repo is public at
+**https://github.com/domut0/ZBLLTrainer** and Pages is live at
+**https://domut0.github.io/ZBLLTrainer/**, served from the GitHub Actions build.
 
-A token was pasted into the previous session's chat. It should be considered
-compromised; the user has been told to revoke it. **Do not use it.**
+`deploy.yml` triggers on pushes to `main`, so the local branch was renamed
+`master` → `main`. First deploy went green in 28s; the shell renders on a 375px
+viewport with no console errors. **Any merge to `main` now ships to the phone
+automatically** — that cuts both ways, so review before merging.
+
+The workflow logs a deprecation warning: `actions/checkout@v4`,
+`setup-node@v4`, `upload-artifact@v4` and `deploy-pages@v4` all target Node 20 and
+are being forced onto Node 24. Harmless today, worth bumping to `@v5` eventually.
+
+A token was pasted into an earlier session's chat. It should be considered
+compromised; the user has been told to revoke it. **Do not use it.** The token now
+in the keyring is a different, `gh auth login` one.
+
+## What is actually buildable
+
+**Nothing, until Issue 03 lands.** 04 is blocked by 03; 05 by 04; 07 by 04 and 06;
+08 by 07; 09 by 08. The whole remaining chain hangs off the diagram renderer, so
+resist the urge to start 04 in parallel — it needs the component's real props.
+
+Both inherited build scripts were re-verified on 2026-08-08: importer 472/472,
+0 rejects, 19 alternatives dropped as designed; `verify-scrambles.mjs` PASS at
+9440 scrambles, 0 mismatches.
 
 ## Repo
 
-`C:\dev\ZBLLTrainer`, branch `master`. No remote configured yet.
+`C:\dev\ZBLLTrainer`, branch `main`, remote `origin` → `domut0/ZBLLTrainer`.
+
+Worktrees `ZBLLTrainer-01` and `ZBLLTrainer-06` are merged and can be cleaned with
+`git worktree remove` once no other session is using the repo. `ZBLLTrainer-03` is
+live — do not touch it.
