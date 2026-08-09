@@ -129,7 +129,7 @@ export function BrowseView() {
       </header>
 
       {/* Main Content Area */}
-      <main ref={mainRef} className="flex-1 overflow-y-auto px-4 py-4 pb-32">
+      <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-6">
         {nav.type === 'sets' && (
           <div className="grid grid-cols-2 gap-4">
             {(['T', 'U', 'L', 'H', 'Pi', 'S', 'AS'] as CaseSet[]).map((set) => {
@@ -232,7 +232,9 @@ export function BrowseView() {
       </main>
 
       {/* Bottom Sticky Control Panel */}
-      <footer className="flex-none fixed bottom-0 left-0 right-0 p-4 bg-zinc-950/95 border-t border-zinc-900/80 backdrop-blur-md z-20 max-w-md mx-auto flex flex-col gap-3">
+      {/* In flow rather than fixed: App now owns the bottom of the screen with
+          the Browse/Drill tab bar, and a fixed footer would sit on top of it. */}
+      <footer className="flex-none p-4 bg-zinc-950/95 border-t border-zinc-900/80 backdrop-blur-md z-20 flex flex-col gap-3">
         {nav.type === 'cases' && (
           <div className="flex bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/60 w-full h-11">
             {(['all', 'ticked', 'unticked'] as FilterMode[]).map((mode) => {
