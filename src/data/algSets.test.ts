@@ -20,8 +20,8 @@ import idsBefore from './__fixtures__/case-ids-before-issue-10.json'
 import { allProgress, getProgress, resetDbForTests, setLearned } from '@/storage/db'
 
 describe('the algorithm set registry', () => {
-  it('ships ZBLL, COLL, LXS, and EO', () => {
-    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL', 'COLL', 'LXS', 'EO'])
+  it('ships all five sets, in build order', () => {
+    expect(ALG_SETS.map((s) => s.id)).toEqual(['ZBLL', 'COLL', 'LXS', 'EO', 'ZBLS'])
     expect(DEFAULT_ALG_SET).toBe('ZBLL')
   })
 
@@ -37,6 +37,7 @@ describe('the algorithm set registry', () => {
     expect(asAlgSetId('COLL')).toBe('COLL')
     expect(asAlgSetId('LXS')).toBe('LXS')
     expect(asAlgSetId('EO')).toBe('EO')
+    expect(asAlgSetId('ZBLS')).toBe('ZBLS')
     expect(asAlgSetId('UNKNOWN')).toBe('ZBLL')
     expect(asAlgSetId(null)).toBe('ZBLL')
     expect(asAlgSetId(42)).toBe('ZBLL')
@@ -44,28 +45,24 @@ describe('the algorithm set registry', () => {
 })
 
 describe('the cases themselves', () => {
-  it('all belong to ZBLL, COLL, LXS, or EO, and every ZBLL case carries a known subset', () => {
+  it('belong to a registered set, and every ZBLL case carries a known subset', () => {
     const subsets = ALG_SET_BY_ID.get('ZBLL')!.subsets
+    const registered = ALG_SETS.map((s) => s.id)
     for (const c of CASES) {
-      if (c.algSet === 'ZBLL') {
-        expect(subsets).toContain(c.subset)
-      } else if (c.algSet === 'COLL') {
-        expect(c.subset).toBe('')
-      } else if (c.algSet === 'LXS') {
-        expect(c.subset).toBe('')
-      } else {
-        expect(c.algSet).toBe('EO')
-        expect(c.subset).toBe('')
-      }
+      expect(registered).toContain(c.algSet)
+      // ZBLL is the only set with subsets of its own; the rest leave it empty.
+      if (c.algSet === 'ZBLL') expect(subsets).toContain(c.subset)
+      else expect(c.subset).toBe('')
     }
   })
 
-  it('numbers 472 ZBLL, 40 COLL, 116 LXS, and 11 EO cases', () => {
-    expect(CASES.length).toBe(639)
+  it('numbers 472 ZBLL, 40 COLL, 116 LXS, 11 EO and 302 ZBLS cases', () => {
+    expect(CASES.length).toBe(941)
     expect(casesInAlgSet('ZBLL').length).toBe(472)
     expect(casesInAlgSet('COLL').length).toBe(40)
     expect(casesInAlgSet('LXS').length).toBe(116)
     expect(casesInAlgSet('EO').length).toBe(11)
+    expect(casesInAlgSet('ZBLS').length).toBe(302)
   })
 
   it('keeps the measured per-subset counts', () => {

@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { Alg } from "cubing/alg";
 import { KPattern } from "cubing/kpuzzle";
 import { cube3x3x3 } from "cubing/puzzles";
-import { llFacelets, stageFacelets, eoFacelets, FACELET_COLOURS } from "./facelets.mjs";
+import { llFacelets, stageFacelets, eoFacelets, zblsFacelets, FACELET_COLOURS } from "./facelets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kpuzzle = await cube3x3x3.kpuzzle();
@@ -75,6 +75,24 @@ if (llFacelets(SOLVED) !== solvedExpected) {
 // ---------------------------------------------------------------------------
 // 2. Dataset-wide invariants. These hold for every case by definition.
 // ---------------------------------------------------------------------------
+// A ZBLS case is the slot corner, the slot edge and the last-layer edge
+// orientation. Its diagram deliberately masks the last-layer corners, so the
+// diagram does NOT determine the case and cannot be used to match a frame —
+// the key can.
+const ZBLS_CORNER = 4;
+const ZBLS_EDGE = 8;
+function zblsKey(p) {
+  const c = p.patternData.CORNERS;
+  const e = p.patternData.EDGES;
+  const cIdx = c.pieces.indexOf(ZBLS_CORNER);
+  const eIdx = e.pieces.indexOf(ZBLS_EDGE);
+  return JSON.stringify([
+    cIdx, c.orientation[cIdx],
+    eIdx, e.orientation[eIdx],
+    [e.orientation[0], e.orientation[1], e.orientation[2], e.orientation[3]],
+  ]);
+}
+
 const ALPHABET = new Set([...Object.values(FACELET_COLOURS), '?', '0', '1']);
 let checked = 0;
 const seen = new Map();
@@ -90,7 +108,9 @@ for (const c of cases) {
     const f = c.facelets[auf];
     checked++;
 
-    const expectedLen = (c.algSet === "LXS" || c.algSet === "EO") ? 28 : 21;
+    // Every stage-era set carries the 21 last-layer stickers plus the 7 slot
+    // stickers; ZBLL and COLL are last-layer only.
+    const expectedLen = ["LXS", "EO", "ZBLS"].includes(c.algSet) ? 28 : 21;
     if (typeof f !== "string" || f.length !== expectedLen) { report(c.displayName, `auf ${auf}: length ${f?.length}, expected ${expectedLen}`); continue; }
     if ([...f].some((ch) => !ALPHABET.has(ch))) { report(c.displayName, `auf ${auf}: bad character in "${f}"`); continue; }
 
@@ -132,6 +152,18 @@ for (const c of cases) {
       if (count('?') !== 16) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 16`);
       const markedCount = count('0') + count('1');
       if (markedCount !== 12) report(c.displayName, `auf ${auf}: ${markedCount} marked edge stickers, expected 12`);
+    } else if (c.algSet === "ZBLS") {
+      // Stage set, but only the last-layer CORNER stickers are masked: LL edge
+      // orientation is part of a ZBLS case, so those stickers have to survive.
+      if (f[U_CENTRE] !== Y) report(c.displayName, `auf ${auf}: centre is ${f[U_CENTRE]}`);
+      if (count('?') !== 12) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 12`);
+      // Marks come in pairs — a last-layer edge shows two stickers — and there
+      // are at most four such edges in the last layer, fewer when the slot edge
+      // is parked up there and keeps its colour.
+      const marked = count('0') + count('1');
+      if (marked % 2 !== 0 || marked > 8) report(c.displayName, `auf ${auf}: ${marked} orientation marks, expected an even number up to 8`);
+      const colouredCount = count(Y) + count(G) + count(B) + count(O) + count(R) + count(FACELET_COLOURS.D);
+      if (colouredCount + marked !== 16) report(c.displayName, `auf ${auf}: ${colouredCount} coloured + ${marked} marked, expected 16 together`);
     }
 
     // Recompute from the stored state by an independent route.
@@ -140,6 +172,8 @@ for (const c of cases) {
       expected = stageFacelets(state.applyAlg(AUF_ALGS[auf]));
     } else if (c.algSet === "EO") {
       expected = eoFacelets(state.applyAlg(AUF_ALGS[auf]));
+    } else if (c.algSet === "ZBLS") {
+      expected = zblsFacelets(state.applyAlg(AUF_ALGS[auf]));
     } else {
       expected = llFacelets(state.applyAlg(AUF_ALGS[auf]));
       if (c.algSet === "COLL") {
@@ -217,7 +251,11 @@ for (const c of cases) {
     let matchedAt = -1;
     for (let r = 0; r < ROTATIONS.length; r++) {
       const derived = SOLVED.applyAlg(ROTATIONS[r].concat(auf).concat(inv));
-      if (c.algSet !== "EO" && !centresSolved(derived)) continue;
+      if (!centresSolved(derived)) continue;
+      if (c.algSet === "ZBLS") {
+        if ("ZBLS:" + zblsKey(derived) === c.id) { matchedAt = r; break; }
+        continue;
+      }
       let faceletRep;
       if (c.algSet === "EO") {
         faceletRep = eoFacelets(derived);
@@ -256,6 +294,8 @@ for (const c of sample) {
       stateFacelets = eoFacelets(state);
     } else if (c.algSet === "LXS") {
       stateFacelets = stageFacelets(state);
+    } else if (c.algSet === "ZBLS") {
+      stateFacelets = zblsFacelets(state);
     } else {
       stateFacelets = llFacelets(state);
       if (c.algSet === "COLL") {

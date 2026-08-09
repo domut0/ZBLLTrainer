@@ -25,7 +25,7 @@ export interface AlgSetDef {
    * representation that includes the FR/DR slot, so this is the seam where that
    * choice is made rather than another `if` inside the component.
    */
-  diagram: 'last-layer' | 'stage' | 'eo'
+  diagram: 'last-layer' | 'stage' | 'eo' | 'zbls'
 }
 
 export const ALG_SETS: readonly AlgSetDef[] = [
@@ -53,9 +53,16 @@ export const ALG_SETS: readonly AlgSetDef[] = [
   {
     id: 'EO',
     label: 'EO',
-    blurb: 'Edge orientation: 6-edge orientation with back-right pair solved',
+    blurb: 'Edge orientation, with the back-right pair already solved',
     subsets: [],
     diagram: 'eo',
+  },
+  {
+    id: 'ZBLS',
+    label: 'ZBLS',
+    blurb: 'Last F2L slot, orienting the last-layer edges on the way',
+    subsets: [],
+    diagram: 'zbls',
   },
 ]
 

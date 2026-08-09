@@ -29,6 +29,35 @@ which is correct: identity is orientation, so every colour is a don't-care.
 
 `scripts/verify-eo-reveal.mjs` checks all 132 case/algorithm/AUF combinations
 exhaustively.
+**Amended 2026-08-09 (Issue 14)** — added the `ZBLS` set from APB: 302 cases and
+339 algorithms, parsed from a 94-row grid whose algorithms sit in columns 1, 3, 6
+and 8, with alternatives newline-separated inside each cell — the same convention
+the ZBLL sheets use, so the existing quoted-multiline reader handles it.
+
+**A ZBLS case is the slot corner (piece 4), the slot edge (piece 8) and the
+orientation of the four last-layer edge positions.** Last-layer corner state and
+last-layer edge PERMUTATION are free; ZBLL solves those next. Measured over the
+sheet's own alternatives: 37 of 37 agree on that key, 3 of 37 on the full state.
+Both give exactly 302 cases, which is why the full-state version looks right and
+still discards 34 of 37 alternatives.
+
+The diagram masks last-layer corners as `?`. The four last-layer edge positions
+carry `'0'`/`'1'` orientation marks **only where an actual last-layer edge sits**:
+where the slot edge is parked in the last layer its colour is kept, because
+*where that edge is* is part of the case and replacing it with a mark makes
+distinct cases draw identically — 75 collisions when that was tried.
+
+Deriving those marks from sticker colour does not work, though it looks like it
+does. A slot edge sitting in the last layer is correctly oriented and still shows
+a side colour, so a colour rule calls it misoriented: wrong on 480 of the 1208
+ZBLS diagrams. The marks come from `EDGES.orientation`.
+
+**A ZBLS case identity is slot corner (4) + slot edge (8) + last-layer edge orientation vector.**
+Last-layer corner permutation & orientation, and last-layer edge permutation, are all free.
+- Validity predicate `zblsLegality`: corners 5, 6, 7 must be home (piece & orientation 0); edges 4, 5, 6, 7, 9, 10, 11 must be home; corner slot 4 and edge slot 8 are free; last-layer edges may be misoriented. EITHER slot piece may already be in place (55 of the 339 algorithms are cases where only the corner is out and slot edge is solved).
+- Case id: `"ZBLS:" + zblsKey` where `zblsKey` is canonicalised over 24 whole-cube rotations × 4 AUFs as prefixes. The open slot is (4, 8) in all 302 cases.
+- Facelets: 28-character stage facelets, with LL corner stickers (pieces < 4) marked `'?'` grey. LL edges (pieces 0..3) retain their sticker colours. Visual diagram (`ZblsDiagram`) adds explicit orientation markers on misoriented LL edge positions.
+- All 302 cases and 339 algorithm lines retained with 0 rejects. Checked exhaustively (1356 case/algorithm/AUF combinations) by `scripts/verify-zbls-reveal.mjs`.
 
 **Amended 2026-08-09 (Issue 12)** — added the `LXS` set from APB: 116 cases
 across six source sheets, globally numbered 1–116, which is a free correctness
@@ -160,6 +189,7 @@ interface TrainerCase {
 }
 
 type CasesFile = TrainerCase[]; // 639 entries: 472 ZBLL + 40 derived COLL + 116 LXS + 11 EO
+type CasesFile = TrainerCase[]; // 930 entries: 472 ZBLL + 40 derived COLL + 116 LXS + 302 ZBLS
 ```
 
 ### `FaceletString`

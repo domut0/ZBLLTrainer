@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "data": "node scripts/import-cases.mjs && node scripts/verify-facelets.mjs && node scripts/verify-scrambles.mjs && node scripts/verify-coll-reveal.mjs && node scripts/verify-lxs-reveal.mjs && node scripts/verify-eo-reveal.mjs"
+    "data": "node scripts/import-cases.mjs && node scripts/verify-facelets.mjs && node scripts/verify-scrambles.mjs && node scripts/verify-coll-reveal.mjs && node scripts/verify-lxs-reveal.mjs && node scripts/verify-eo-reveal.mjs && node scripts/verify-zbls-reveal.mjs"
   },
   "dependencies": {
     "cubing": "^0.63.3",

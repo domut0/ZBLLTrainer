@@ -289,9 +289,12 @@ export function stageFaceletsAllAufs(pattern) {
 }
 
 // ---------------------------------------------------------------------------
-// EO facelets for Edge Orientation set (28 stickers: 21 LL + 7 slot).
-// Non-case stickers are '?'. The 6 edge slots (0, 1, 2, 3, 5, 8) carry '0' for
-// oriented and '1' for misoriented/flipped, derived from EDGES.orientation.
+// EO facelets (28 stickers: 21 LL + 7 slot).
+//
+// An EO case is only the orientation of six edges, so every colour is a
+// don't-care and the whole string is markers and '?'. The six positions each
+// occupy two stickers — one on the U face, one on the side bar — so a flipped
+// edge shows two marks.
 // ---------------------------------------------------------------------------
 const EO_EDGE_POSITIONS = [
   { slot: 0, primaryIdx: 7, sideIdx: 16 },   // UF
@@ -317,6 +320,57 @@ export function eoFaceletsAllAufs(pattern) {
   return AUF_ALGS.map((alg) => eoFacelets(pattern.applyAlg(alg)));
 }
 
+// ---------------------------------------------------------------------------
+// ZBLS facelets.
+//
+// A ZBLS case is the slot corner, the slot edge, and the ORIENTATION of the four
+// last-layer edge positions. Last-layer corners and last-layer edge PERMUTATION
+// are not part of it, so both are masked — drawing a permutation the case does
+// not fix is the mistake HANDOFF-ALG-SETS.md calls out for COLL.
+//
+// The four last-layer edge positions carry '0'/'1' rather than a colour, as EO's
+// do. Inferring orientation from the sticker instead looks right and is not: when
+// the FR/DR slot edge is parked in the last layer it is correctly oriented yet
+// shows a side colour, and a colour rule calls it misoriented. That was wrong on
+// 480 of the 1208 diagrams.
+// ---------------------------------------------------------------------------
+const LL_EDGE_FACELETS = [
+  { u: 1, side: 10 }, // back
+  { u: 5, side: 13 }, // right
+  { u: 7, side: 16 }, // front
+  { u: 3, side: 19 }, // left
+];
+
+export function zblsFacelets(pattern) {
+  const ll = llFacelets(pattern);
+  const slot = readPositionsWithSign(pattern, STAGE_SLOT_POSITIONS, ORI_SIGN);
+  const chars = [...(ll + slot)];
+
+  for (let i = 0; i < ALL_STAGE_POSITIONS.length; i++) {
+    if (i === U_CENTRE_INDEX) continue;
+    const pos = ALL_STAGE_POSITIONS[i];
+    const piece = pattern.patternData[pos.orbit].pieces[pos.slot];
+    if (pos.orbit === "CORNERS" && piece < 4) chars[i] = "?";
+  }
+
+  for (const { u, side } of LL_EDGE_FACELETS) {
+    const slot = POSITIONS[u].slot;
+    const piece = pattern.patternData.EDGES.pieces[slot];
+    // Only positions holding an actual last-layer edge become markers. Where the
+    // FR/DR slot edge is parked in the last layer, its colour has to stay: WHERE
+    // that edge sits is part of the case, and replacing it with a mark makes
+    // genuinely different cases draw identically.
+    if (piece >= 4) continue;
+    const mark = pattern.patternData.EDGES.orientation[slot] === 0 ? "0" : "1";
+    chars[u] = mark;
+    chars[side] = mark;
+  }
+  return chars.join("");
+}
+
+export function zblsFaceletsAllAufs(pattern) {
+  return AUF_ALGS.map((alg) => zblsFacelets(pattern.applyAlg(alg)));
+}
 export const FACELET_COLOURS = COLOUR;
 export const ORIENTATION_SIGN = ORI_SIGN;
 
