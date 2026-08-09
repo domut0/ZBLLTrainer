@@ -53,6 +53,23 @@ function isCollSolved(pd: any) {
   return ROTATION_ALGS.some((r) => collSolvedInFrame(p.applyAlg(r).patternData))
 }
 
+function lxsSolvedInFrame(pd: any) {
+  const c = pd.CORNERS
+  const e = pd.EDGES
+  for (let i = 4; i <= 7; i++) {
+    if (c.pieces[i] !== i || c.orientation[i] !== 0) return false
+  }
+  for (const i of [4, 5, 6, 7, 8, 9, 10, 11]) {
+    if (e.pieces[i] !== i || e.orientation[i] !== 0) return false
+  }
+  return true
+}
+
+function isLxsSolved(pd: any) {
+  const p = new (SOLVED.constructor as any)(kpuzzle, pd)
+  return ROTATION_ALGS.some((r) => lxsSolvedInFrame(p.applyAlg(r).patternData))
+}
+
 
 const applyAllPattern = (scramble: string, reveal: string) =>
   SOLVED.applyAlg(new Alg(scramble)).applyAlg(new Alg(reveal)).patternData
@@ -103,6 +120,11 @@ describe('revealAlgorithm', () => {
               isCollSolved(resultPattern),
               `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
             ).toBe(true)
+          } else if (c.algSet === 'LXS') {
+            expect(
+              isLxsSolved(resultPattern),
+              `${c.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal:   ${reveal}`,
+            ).toBe(true)
           } else {
             expect(
               isSolved(JSON.stringify(resultPattern)),
@@ -127,7 +149,7 @@ describe('revealAlgorithm', () => {
           if (s.auf === 0) continue
           const withoutPre = revealAlgorithm(a, 0 as Auf)
           const resultPattern = applyAllPattern(s.scramble, withoutPre)
-          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
+          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : c.algSet === 'LXS' ? isLxsSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
           if (!solved) anyFailed = true
         }
       }
@@ -143,7 +165,7 @@ describe('revealAlgorithm', () => {
           if (a.aufOffset === 0) continue
           const withoutPost = revealAlgorithm({ ...a, aufOffset: 0 }, s.auf)
           const resultPattern = applyAllPattern(s.scramble, withoutPost)
-          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
+          const solved = c.algSet === 'COLL' ? isCollSolved(resultPattern) : c.algSet === 'LXS' ? isLxsSolved(resultPattern) : isSolved(JSON.stringify(resultPattern))
           if (!solved) anyFailed = true
         }
       }
@@ -165,7 +187,7 @@ describe('revealAlgorithm', () => {
         const reveal = revealAlgorithm(a, s.auf)
         const resultPattern = applyAllPattern(s.scramble, reveal)
         expect(
-          isSolved(JSON.stringify(resultPattern)),
+          isLxsSolved(resultPattern),
           `wide-alg case ${wideCase!.displayName} auf=${s.auf} offset=${a.aufOffset}\n  scramble: ${s.scramble}\n  reveal: ${reveal}`,
         ).toBe(true)
       }

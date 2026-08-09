@@ -124,6 +124,9 @@ for (const c of cases) {
     } else if (c.algSet === "LXS") {
       // Stage set: 28 stickers
       if (f[U_CENTRE] !== Y) report(c.displayName, `auf ${auf}: centre is ${f[U_CENTRE]}`);
+      if (count('?') !== 20) report(c.displayName, `auf ${auf}: ${count('?')} '?', expected 20`);
+      const colouredCount = count(Y) + count(G) + count(B) + count(O) + count(R) + count(FACELET_COLOURS.D);
+      if (colouredCount !== 8) report(c.displayName, `auf ${auf}: ${colouredCount} coloured stickers, expected 8`);
     }
 
     // Recompute from the stored state by an independent route.

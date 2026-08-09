@@ -39,6 +39,21 @@ function legality(p, algSet) {
   return null;
 }
 
+const LXS_CORNER = 4;
+const LXS_EDGES = [5, 8];
+
+function lxsKey(p) {
+  const c = p.patternData.CORNERS, e = p.patternData.EDGES;
+  const at = c.pieces.indexOf(LXS_CORNER);
+  return JSON.stringify([
+    at, c.orientation[at],
+    ...LXS_EDGES.map((pc) => {
+      const i = e.pieces.indexOf(pc);
+      return [i, e.orientation[i]];
+    }),
+  ]);
+}
+
 /** Case id of whatever a scramble produces, derived the importer's way. */
 function idOf(scrambleAlg) {
   let best = null;
@@ -69,6 +84,7 @@ for (const c of sample) {
     const p = SOLVED.applyAlg(alg);
     const bad = legality(p, c.algSet);
     if (bad) { illegal++; if (illegal <= 3) console.log(`  ILLEGAL ${c.displayName}: ${bad} — ${entry.scramble}`); }
+
     let expectedId;
     if (c.algSet === "COLL") {
       let best = null;
@@ -82,6 +98,15 @@ for (const c of sample) {
         temp = temp.applyAlg(AUF[1]);
       }
       expectedId = "COLL:" + best;
+    } else if (c.algSet === "LXS") {
+      let best = null;
+      let temp = p;
+      for (let i = 0; i < 4; i++) {
+        const s = lxsKey(temp);
+        if (best === null || s < best) best = s;
+        temp = temp.applyAlg(AUF[1]);
+      }
+      expectedId = "LXS:" + best;
     } else {
       expectedId = idOf(alg);
     }

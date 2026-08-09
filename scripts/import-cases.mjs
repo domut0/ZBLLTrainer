@@ -55,14 +55,18 @@ function parseCsv(text) {
 // ---------------------------------------------------------------------------
 const ZERO_WIDTH = /[​-‍﻿ ]/g;
 
-function normaliseAlg(raw) {
+function normaliseAlg(raw, isApb = false) {
   let s = raw
     .replace(ZERO_WIDTH, " ")
     .replace(/[‘’ʼ′]/g, "'")   // curly apostrophes, prime
     .replace(/\(\s*(U2|U'|U)\s*\)/g, " $1 ")       // AUF parens -> real move
-    .replace(/\[\s*(U2|U'|U)\s*\]/g, " $1 ")       // AUF bracket -> real move
-    .replace(/([URFDLB])([URFDLB])/g, "$1 $2")       // split unspaced face moves e.g. UD'
-    .replace(/([URFDLB])([URFDLB])/g, "$1 $2")
+    .replace(/\[\s*(U2|U'|U)\s*\]/g, " $1 ");       // AUF bracket -> real move
+  if (isApb) {
+    s = s
+      .replace(/([URFDLB])([URFDLB])/g, "$1 $2")       // split unspaced face moves e.g. UD'
+      .replace(/([URFDLB])([URFDLB])/g, "$1 $2");
+  }
+  s = s
     .replace(/[()]/g, " ")                          // grouping parens
     .replace(/\s+/g, " ")
     .trim();
@@ -96,7 +100,7 @@ function centresSolved(p) {
 // inverted algorithm. Appending U to the resulting pattern is post-multiplication,
 // which is not what "the sheet omitted a trailing AUF" means once you invert.
 // Brute-force 24 rotations x 4 AUFs as prefixes and keep whatever lands legal.
-function analyse(cleaned, legalityFn = zbllLegality) {
+function analyse(cleaned, legalityFn = zbllLegality, keyFn = serialise) {
   let invX;
   try {
     invX = new Alg(cleaned).invert();
@@ -111,7 +115,7 @@ function analyse(cleaned, legalityFn = zbllLegality) {
       if (!centresSolved(p)) continue;
       const errStr = legalityFn(p);
       if (errStr) continue;
-      legal.push({ auf: i, ser: serialise(p), pattern: p });
+      legal.push({ auf: i, ser: keyFn(p), pattern: p });
     }
   }
   if (!legal.length) {
@@ -154,6 +158,23 @@ function lxsLegality(p) {
   for (let i = 5; i <= 7; i++) if (c.pieces[i] !== i || c.orientation[i] !== 0) return `F2L corner ${i} disturbed`;
   for (const i of [4, 6, 7, 9, 10, 11]) if (e.pieces[i] !== i || e.orientation[i] !== 0) return `F2L edge ${i} disturbed`;
   return null;
+}
+
+// The DFR corner is corner piece 4. The edges belonging at DR and FR are
+// edge pieces 5 and 8. F2L is corners 5,6,7 and edges 4,6,7,9,10,11.
+const LXS_CORNER = 4;
+const LXS_EDGES = [5, 8];
+
+function lxsKey(p) {
+  const c = p.patternData.CORNERS, e = p.patternData.EDGES;
+  const at = c.pieces.indexOf(LXS_CORNER);
+  return JSON.stringify([
+    at, c.orientation[at],
+    ...LXS_EDGES.map((pc) => {
+      const i = e.pieces.indexOf(pc);
+      return [i, e.orientation[i]];
+    }),
+  ]);
 }
 
 function toCubeState(p) {
@@ -517,19 +538,23 @@ for (const [file, sheetName, expectedCount] of LXS_SHEETS) {
         }
 
         const algs = [];
+        let caseKey = null;
         let caseId = null;
         let caseState = null;
 
         for (const line of sourceAlgs) {
-          const cleaned = normaliseAlg(line);
+          const cleaned = normaliseAlg(line, true);
           if (!cleaned) continue;
-          const res = analyse(cleaned, lxsLegality);
+          const res = analyse(cleaned, lxsLegality, lxsKey);
           if (res.error) {
             warnings.push({ set: "LXS", group: sheetName, index: h.caseNum, alg: line, reason: res.error });
             continue;
           }
-          if (caseId === null) { caseId = res.id; caseState = res.state; }
-          else if (res.id !== caseId) {
+          if (caseKey === null) {
+            caseKey = res.id;
+            caseId = "LXS:" + caseKey;
+            caseState = res.state;
+          } else if (res.id !== caseKey) {
             warnings.push({ set: "LXS", group: sheetName, index: h.caseNum, alg: line, reason: "resolves to a different case than the primary" });
             continue;
           }

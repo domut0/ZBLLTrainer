@@ -40,12 +40,13 @@ function rebuildState(state) {
 function lxsSolvedInFrame(p) {
   const c = p.patternData.CORNERS;
   const e = p.patternData.EDGES;
-  return (
-    c.pieces.every((v, i) => v === i) &&
-    c.orientation.every((v) => v === 0) &&
-    e.pieces.every((v, i) => v === i) &&
-    e.orientation.every((v) => v === 0)
-  );
+  for (let i = 4; i <= 7; i++) {
+    if (c.pieces[i] !== i || c.orientation[i] !== 0) return false;
+  }
+  for (const i of [4, 5, 6, 7, 8, 9, 10, 11]) {
+    if (e.pieces[i] !== i || e.orientation[i] !== 0) return false;
+  }
+  return true;
 }
 
 const lxsSolved = (p) => ROTATION_ALGS.some((r) => lxsSolvedInFrame(p.applyAlg(r)));

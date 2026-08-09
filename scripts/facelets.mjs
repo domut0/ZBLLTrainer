@@ -264,11 +264,24 @@ function readPositionsWithSign(pattern, positions, sign) {
   }).join("");
 }
 
-/** The 28 stickers (21 LL + 7 slot) of a stage pattern. */
+const ALL_STAGE_POSITIONS = [...POSITIONS, ...STAGE_SLOT_POSITIONS];
+
+/** The 28 stickers (21 LL + 7 slot) of a stage pattern, with non-case LL stickers greyed out as '?'. */
 export function stageFacelets(pattern) {
   const ll = llFacelets(pattern);
   const slot = readPositionsWithSign(pattern, STAGE_SLOT_POSITIONS, ORI_SIGN);
-  return ll + slot;
+  const full = ll + slot;
+
+  const chars = [...full];
+  for (let i = 0; i < ALL_STAGE_POSITIONS.length; i++) {
+    if (i === U_CENTRE_INDEX) continue;
+    const pos = ALL_STAGE_POSITIONS[i];
+    const piece = pattern.patternData[pos.orbit].pieces[pos.slot];
+    if (piece < 4) {
+      chars[i] = "?";
+    }
+  }
+  return chars.join("");
 }
 
 export function stageFaceletsAllAufs(pattern) {

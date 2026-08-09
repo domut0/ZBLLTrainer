@@ -3,7 +3,32 @@
 Frozen ahead of the importer so dependent work can start. Issue 02 must produce
 exactly this; Issues 03, 06 and 07 may rely on it.
 
-**Amended 2026-08-09 (Issue 12)** — added the `LXS` set (Last eXtension Slot in APB, 116 cases across six sheets). Introduced stage facelets for F2L-stage sets: a 28-character `FaceletString` extending the 21 last-layer stickers with 7 FR/DR slot stickers (indices 21–27). `AlgSetDef.diagram` selects `'stage'`. `scripts/verify-lxs-reveal.mjs` checks all 504 LXS reveal combinations exhaustively.
+**Amended 2026-08-09 (Issue 12)** — added the `LXS` set from APB: 116 cases
+across six source sheets, globally numbered 1–116, which is a free correctness
+check on the parse. Introduced **stage facelets** for F2L-stage sets: a
+28-character `FaceletString` extending the 21 last-layer stickers with 7 FR/DR
+slot stickers at indices 21–27, derived from PuzzleGeometry rather than written
+by hand. `AlgSetDef.diagram` selects `'stage'`.
+
+**An LXS case is three pieces, not a cube state.** It is the placement of the
+DFR corner and the two edges belonging at DR and FR, with the rest of F2L
+intact. **The last layer is not part of the case**, so two algorithms that both
+solve LXS routinely leave the last layer differently. Modelling identity as the
+full state instead looks fine — the case count still comes out at 116 — and then
+silently discards most of the sheet: measured over the six sheets, all 147
+alternatives agree on the three pieces and only 7 agree on the full state.
+The three are also fully interchangeable: each solves the case from the state
+any other was derived from, which is why one scramble per case is enough.
+
+The diagram follows from that. A stage sticker is drawn in colour only when the
+piece occupying it is one of the case's three pieces or a solved F2L piece;
+every other last-layer sticker is `?`, as COLL's edges are. The mask is computed
+from the cube state, not from a fixed index list, because the case pieces move —
+"DR edge at UF" versus "at UL" is the sheets' whole organising principle.
+
+`scripts/verify-lxs-reveal.mjs` checks every LXS case, algorithm and AUF
+exhaustively — 1060 combinations — rather than sampling. Sampling is what hid
+the equivalent COLL defect.
 
 **Amended 2026-08-09 (Issue 11)** — added the `COLL` set, derived at build time
 from the ZBLL cases rather than from any new source data. Added `?` to the
@@ -121,7 +146,7 @@ type CasesFile = TrainerCase[]; // 628 entries: 472 ZBLL + 40 derived COLL + 116
 | `O` | orange | R |
 | `B` | blue | B |
 | `R` | red | L |
-| `W` | white | D — **appears on slot stickers in stage diagrams** |
+| `W` | white | D — **never in a last-layer diagram**; appears on stage slot stickers |
 | `?` | grey | don't care — **used for COLL edges** |
 
 Index layout for last-layer diagrams (21 stickers):

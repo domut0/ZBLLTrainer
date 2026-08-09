@@ -209,17 +209,46 @@ export type ValidationResult =
  * edge PERMUTATION free — that is the definition of the set, and checking
  * permutation here would reject most of a COLL case's own algorithms.
  */
-function matcherFor(algSet: AlgSetId): (state: CubeState, target: CubeState) => boolean {
-  if (algSet !== 'COLL') return statesEqual
+const LXS_CORNER = 4
+const LXS_EDGES = [5, 8]
 
-  return (state, target) => {
-    const cornersMatch =
-      state.corners.pieces.every((v, i) => v === target.corners.pieces[i]) &&
-      state.corners.orientation.every((v, i) => v === target.corners.orientation[i])
-    const f2lEdgesHome = state.edges.pieces.slice(4).every((v, i) => v === i + 4)
-    const edgesOriented = state.edges.orientation.every((v) => v === 0)
-    return cornersMatch && f2lEdgesHome && edgesOriented
+function lxsKey(s: CubeState): string {
+  const at = s.corners.pieces.indexOf(LXS_CORNER)
+  return JSON.stringify([
+    at,
+    s.corners.orientation[at],
+    ...LXS_EDGES.map((pc) => {
+      const i = s.edges.pieces.indexOf(pc)
+      return [i, s.edges.orientation[i]]
+    }),
+  ])
+}
+
+function matcherFor(algSet: AlgSetId): (state: CubeState, target: CubeState) => boolean {
+  if (algSet === 'COLL') {
+    return (state, target) => {
+      const cornersMatch =
+        state.corners.pieces.every((v, i) => v === target.corners.pieces[i]) &&
+        state.corners.orientation.every((v, i) => v === target.corners.orientation[i])
+      const f2lEdgesHome = state.edges.pieces.slice(4).every((v, i) => v === i + 4)
+      const edgesOriented = state.edges.orientation.every((v) => v === 0)
+      return cornersMatch && f2lEdgesHome && edgesOriented
+    }
   }
+
+  if (algSet === 'LXS') {
+    return (state, target) => {
+      for (let i = 5; i <= 7; i += 1) {
+        if (state.corners.pieces[i] !== i || state.corners.orientation[i] !== 0) return false
+      }
+      for (const i of [4, 6, 7, 9, 10, 11]) {
+        if (state.edges.pieces[i] !== i || state.edges.orientation[i] !== 0) return false
+      }
+      return lxsKey(state) === lxsKey(target)
+    }
+  }
+
+  return statesEqual
 }
 
 /**
