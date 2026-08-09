@@ -13,6 +13,7 @@ import {
   attemptsForCase,
   clearAll,
   discardLastAttempt,
+  chosenAlg,
   getProgress,
   lastAttempt,
   resetDbForTests,
@@ -64,13 +65,30 @@ describe('progress', () => {
     expect(p.primaryAlgIndex).toBe(2)
   })
 
-  it('sets and clears a custom algorithm, trimming it', async () => {
-    await setCustomAlg(CASE_A, "  R U R'  ")
-    expect((await getProgress(CASE_A)).customAlg).toBe("R U R'")
+  it('sets and clears a custom algorithm, keeping its AUF offset', async () => {
+    await setCustomAlg(CASE_A, { alg: "  R U R'  ", aufOffset: 2 })
+    expect((await getProgress(CASE_A)).customAlg).toEqual({ alg: "R U R'", aufOffset: 2 })
     await setCustomAlg(CASE_A, undefined)
     expect((await getProgress(CASE_A)).customAlg).toBeUndefined()
-    await setCustomAlg(CASE_A, '   ')
+    await setCustomAlg(CASE_A, { alg: '   ', aufOffset: 0 })
     expect((await getProgress(CASE_A)).customAlg).toBeUndefined()
+  })
+
+  it('prefers a custom algorithm over the picked alternative', async () => {
+    const algs = [
+      { alg: "R U R'", aufOffset: 0 as const },
+      { alg: "L U L'", aufOffset: 1 as const },
+    ]
+    expect(chosenAlg(algs, undefined)).toEqual(algs[0])
+    await setPrimaryAlgIndex(CASE_A, 1)
+    expect(chosenAlg(algs, await getProgress(CASE_A))).toEqual(algs[1])
+    await setCustomAlg(CASE_A, { alg: "F U F'", aufOffset: 3 })
+    expect(chosenAlg(algs, await getProgress(CASE_A))).toEqual({ alg: "F U F'", aufOffset: 3 })
+  })
+
+  it('falls back to the first algorithm if the stored index is out of range', () => {
+    const algs = [{ alg: "R U R'", aufOffset: 0 as const }]
+    expect(chosenAlg(algs, { caseId: CASE_A, learned: false, primaryAlgIndex: 9 })).toEqual(algs[0])
   })
 })
 
