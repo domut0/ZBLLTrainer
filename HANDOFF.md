@@ -22,7 +22,7 @@ Source data is the user's own spreadsheet, imported at build time.
 |---|---|---|
 | 01 | Installable app shell | **Done**, merged. Written by `gem`, verified by Claude |
 | 02 | Case importer | **Done**, merged. 472/472, 472 unique ids, 0 rejects |
-| 03 | LL diagram renderer | **In progress** in a Claude Sonnet subagent. As of 2026-08-08 the branch is still at `7ce28a1` with only an untracked `scripts/derive-tmp.mjs` in the worktree. Leave `C:\dev\ZBLLTrainer-03` alone until it lands |
+| 03 | LL diagram renderer | **Not started — agent stopped.** A Claude Sonnet subagent was killed mid-task on 2026-08-08. Branch still at `7ce28a1`, nothing committed, only an untracked `scripts/derive-tmp.mjs` left behind. The worktree is free; take it or delete it. **Read "Why 03 stalled" below before retrying** |
 | 06 | Scramble precompute | **Done**, merged. 9440 scrambles, independently verified |
 | 04, 05, 07, 08, 09 | Browse/tick, case detail, drill loop, stats, durability | **Not started** |
 
@@ -66,6 +66,30 @@ scramble instead of a short last-layer sequence that telegraphs the case.
 exotic notation (`l R`, `M'`, embedded rotations) the importer misreads. The first
 algorithm establishes identity; disagreeing alternatives are dropped and logged to
 `data/rejects.json`. Do not "fix" this by rejecting the case.
+
+## Why 03 stalled, and how to unblock it
+
+The stopped agent was trying to derive, by hand, which sticker colour each corner
+and edge shows given the orbit arrays in `cases.json`. That is fiddly 3D geometry,
+it is easy to get subtly wrong, and a wrong mapping produces plausible-looking but
+incorrect diagrams for all 472 cases — the worst possible failure mode, because it
+looks fine until you are at the table with a cube.
+
+**Recommendation: don't derive stickers in the component at all.** Have the
+importer emit a facelet representation per case — a fixed-length string of sticker
+colours — and let the diagram component read that. Then Issue 03 becomes "draw 21
+coloured squares from a string" with no geometry in it.
+
+This is the better split regardless of who implements it: the derivation happens
+once, in Node, next to the importer, where it can be asserted against known cases
+(a solved last layer is all-yellow on top; a Sune case has a known corner pattern).
+That is testable in a way component-side geometry is not.
+
+It does mean amending `data/SCHEMA.md`, which is currently frozen — do that
+deliberately, and regenerate `cases.json` after. Ground truth for the mapping is
+cubing.js's own puzzle definition, not hand-derivation; the empirical technique in
+`scripts/spike.mjs` (apply a known move, diff against solved, observe what changed)
+is the reliable way to pin it down.
 
 ## The trap ahead — Issue 07
 
