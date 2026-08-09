@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { CASES, type CaseSet } from '@/data'
 import { allProgress, toggleLearned, DEFAULT_PROGRESS, type ProgressRecord } from '@/storage/db'
 import { LLDiagram } from '@/components/LLDiagram'
+import { CaseDetail } from '@/components/CaseDetail'
 
 type NavState =
   | { type: 'sets' }
   | { type: 'groups'; set: CaseSet }
   | { type: 'cases'; set: CaseSet; group: string }
+  | { type: 'detail'; set: CaseSet; group: string; caseId: string }
 
 type FilterMode = 'all' | 'ticked' | 'unticked'
 
@@ -116,11 +118,13 @@ export function BrowseView() {
           {nav.type === 'sets' && 'Lock In ZBLL'}
           {nav.type === 'groups' && `Set ${nav.set}`}
           {nav.type === 'cases' && nav.group}
+          {nav.type === 'detail' && nav.group}
         </h1>
         <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-900/50 px-2.5 py-1 rounded-lg border border-zinc-800/40">
           {nav.type === 'sets' && 'Sets'}
           {nav.type === 'groups' && 'Groups'}
           {nav.type === 'cases' && 'Grid'}
+          {nav.type === 'detail' && 'Detail'}
         </div>
       </header>
 
@@ -202,8 +206,29 @@ export function BrowseView() {
             progress={progress}
             filterMode={filterMode}
             onToggleLearned={handleToggleLearned}
+            onOpenDetail={(caseId) => setNav({ type: 'detail', set: nav.set, group: nav.group, caseId })}
           />
         )}
+
+        {nav.type === 'detail' && (() => {
+          const c = CASES.find((x) => x.id === nav.caseId)
+          if (!c) return null
+          const p = progress.get(nav.caseId) || DEFAULT_PROGRESS(nav.caseId)
+          return (
+            <CaseDetail
+              c={c}
+              progress={p}
+              onProgressChange={(nextRecord) => {
+                setProgress((prev) => {
+                  const next = new Map(prev)
+                  next.set(nav.caseId, nextRecord)
+                  return next
+                })
+              }}
+              onBack={() => setNav({ type: 'cases', set: nav.set, group: nav.group })}
+            />
+          )
+        })()}
       </main>
 
       {/* Bottom Sticky Control Panel */}
@@ -230,7 +255,9 @@ export function BrowseView() {
         {nav.type !== 'sets' && (
           <button
             onClick={() => {
-              if (nav.type === 'cases') {
+              if (nav.type === 'detail') {
+                setNav({ type: 'cases', set: nav.set, group: nav.group })
+              } else if (nav.type === 'cases') {
                 setNav({ type: 'groups', set: nav.set })
               } else if (nav.type === 'groups') {
                 setNav({ type: 'sets' })
@@ -241,7 +268,7 @@ export function BrowseView() {
             <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
-            Back to {nav.type === 'cases' ? 'Groups' : 'Sets'}
+            Back to {nav.type === 'detail' ? 'Grid' : nav.type === 'cases' ? 'Groups' : 'Sets'}
           </button>
         )}
 
@@ -274,9 +301,10 @@ interface CaseGridProps {
   progress: Map<string, ProgressRecord>
   filterMode: FilterMode
   onToggleLearned: (caseId: string) => void
+  onOpenDetail: (caseId: string) => void
 }
 
-function CaseGrid({ set, group, progress, filterMode, onToggleLearned }: CaseGridProps) {
+function CaseGrid({ set, group, progress, filterMode, onToggleLearned, onOpenDetail }: CaseGridProps) {
   // Filter cases in the selected group
   const casesInGroup = useMemo(() => {
     return CASES.filter((c) => c.set === set && c.group === group)
@@ -311,28 +339,40 @@ function CaseGrid({ set, group, progress, filterMode, onToggleLearned }: CaseGri
         const isTicked = !!progress.get(c.id)?.learned
 
         return (
-          <button
-            key={c.id}
-            onClick={() => onToggleLearned(c.id)}
-            className={`relative flex flex-col items-center justify-center p-2 pt-6 rounded-xl border aspect-square transition-all duration-150 active:scale-95 text-zinc-400 ${
-              isTicked
-                ? 'border-emerald-500/70 bg-emerald-950/10 text-zinc-100 shadow-[0_0_12px_rgba(16,185,129,0.08)]'
-                : 'border-zinc-800/80 bg-zinc-900/40 hover:border-zinc-700/60'
-            }`}
-            aria-label={`Case ${c.indexInGroup}, ${isTicked ? 'learned' : 'not learned'}`}
-          >
-            <span className="absolute top-2 left-2 text-[10px] font-extrabold tracking-tight text-zinc-500">
-              #{c.indexInGroup}
-            </span>
-            {isTicked && (
-              <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-emerald-500 text-zinc-950 flex items-center justify-center shadow-sm">
-                <svg className="w-2.5 h-2.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              </div>
-            )}
-            <LLDiagram facelets={c.facelets[0]} className="w-14 h-14" />
-          </button>
+          <div key={c.id} className="relative aspect-square">
+            <button
+              onClick={() => onOpenDetail(c.id)}
+              className={`w-full h-full flex flex-col items-center justify-center p-2 pt-6 rounded-xl border transition-all duration-150 active:scale-95 text-zinc-400 ${
+                isTicked
+                  ? 'border-emerald-500/70 bg-emerald-950/10 text-zinc-100 shadow-[0_0_12px_rgba(16,185,129,0.08)]'
+                  : 'border-zinc-800/80 bg-zinc-900/40 hover:border-zinc-700/60'
+              }`}
+              aria-label={`Case ${c.indexInGroup}, ${isTicked ? 'learned' : 'not learned'}`}
+            >
+              <span className="absolute top-2 left-2 text-[10px] font-extrabold tracking-tight text-zinc-500">
+                #{c.indexInGroup}
+              </span>
+              <LLDiagram facelets={c.facelets[0]} className="w-14 h-14" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleLearned(c.id)
+              }}
+              className="absolute top-0 right-0 w-11 h-11 flex items-center justify-center z-10"
+              aria-label={`Toggle Case ${c.indexInGroup} learned state`}
+            >
+              {isTicked ? (
+                <div className="w-5 h-5 rounded-full bg-emerald-500 text-zinc-950 flex items-center justify-center shadow-sm">
+                  <svg className="w-3.5 h-3.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-5 h-5 rounded-full border border-zinc-700 hover:border-zinc-500 bg-zinc-950/80 flex items-center justify-center transition-colors" />
+              )}
+            </button>
+          </div>
         )
       })}
     </div>

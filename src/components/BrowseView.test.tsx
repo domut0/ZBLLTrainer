@@ -80,12 +80,12 @@ describe('BrowseView', () => {
     // Expect case grid view with group header name
     expect(await screen.findByText(groupName)).toBeInTheDocument()
 
-    // Find the Case 1 button
-    const case1Btn = screen.getByLabelText('Case 1, not learned')
-    expect(case1Btn).toBeInTheDocument()
+    // Find the Case 1 tick button
+    const case1TickBtn = screen.getByLabelText('Toggle Case 1 learned state')
+    expect(case1TickBtn).toBeInTheDocument()
 
-    // Tap Case 1 to toggle learned
-    fireEvent.click(case1Btn)
+    // Tap Case 1 tick to toggle learned
+    fireEvent.click(case1TickBtn)
 
     // The case should now be learned
     await waitFor(() => {
@@ -137,11 +137,12 @@ describe('BrowseView', () => {
     expect(case1).toBeInTheDocument()
 
     // Helper to get currently visible cases
-    const getVisibleCases = () => screen.queryAllByLabelText(/Case \d+/i)
+    const getVisibleCases = () => screen.queryAllByLabelText(/^Case \d+/i)
     expect(getVisibleCases().length).toBe(totalGroupCases)
 
     // Toggle Case 1 to learned
-    fireEvent.click(case1)
+    const case1TickBtn = screen.getByLabelText('Toggle Case 1 learned state')
+    fireEvent.click(case1TickBtn)
     await waitFor(() => {
       expect(screen.getByLabelText('Case 1, learned')).toBeInTheDocument()
     })
